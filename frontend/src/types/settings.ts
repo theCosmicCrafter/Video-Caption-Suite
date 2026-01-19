@@ -93,11 +93,13 @@ export interface UpdatePromptRequest {
 // Directory types
 export interface DirectoryRequest {
   directory: string
+  traverse_subfolders?: boolean
 }
 
 export interface DirectoryResponse {
   directory: string
   video_count?: number
+  traverse_subfolders?: boolean
 }
 
 export interface DirectoryBrowseResponse {

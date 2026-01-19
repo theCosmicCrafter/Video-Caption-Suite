@@ -6,20 +6,18 @@ import { BaseCard, BaseButton } from '@/components/base'
 import DirectorySettings from './DirectorySettings.vue'
 import ModelSettings from './ModelSettings.vue'
 import InferenceSettings from './InferenceSettings.vue'
-import OptimizationSettings from './OptimizationSettings.vue'
 import PromptSettings from './PromptSettings.vue'
 
 const settingsStore = useSettingsStore()
 const { loading, error, hasChanges } = storeToRefs(settingsStore)
 
-type Tab = 'directory' | 'model' | 'inference' | 'optimization' | 'prompt'
+type Tab = 'directory' | 'model' | 'inference' | 'prompt'
 const activeTab = ref<Tab>('directory')
 
 const tabs: { key: Tab; label: string }[] = [
   { key: 'directory', label: 'Directory' },
   { key: 'model', label: 'Model' },
   { key: 'inference', label: 'Inference' },
-  { key: 'optimization', label: 'Optimization' },
   { key: 'prompt', label: 'Prompt' },
 ]
 
@@ -108,7 +106,6 @@ onMounted(() => {
       <DirectorySettings v-if="activeTab === 'directory'" />
       <ModelSettings v-if="activeTab === 'model'" />
       <InferenceSettings v-if="activeTab === 'inference'" />
-      <OptimizationSettings v-if="activeTab === 'optimization'" />
       <PromptSettings v-if="activeTab === 'prompt'" class="flex-1 min-h-0" />
     </div>
   </BaseCard>

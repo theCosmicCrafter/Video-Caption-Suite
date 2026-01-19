@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { useVideoStore } from '@/stores/videoStore'
 import { useApi } from '@/composables/useApi'
-import { BaseButton } from '@/components/base'
+import { BaseButton, BaseToggle } from '@/components/base'
 
 const videoStore = useVideoStore()
 const api = useApi()
@@ -16,12 +16,14 @@ const showBrowser = ref(false)
 const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 const inputError = ref<string | null>(null)
+const traverseSubfolders = ref<boolean>(false)
 
 async function loadCurrentDirectory() {
   const result = await api.getDirectory()
   if (result) {
     currentDir.value = result.directory
     inputDir.value = result.directory
+    traverseSubfolders.value = result.traverse_subfolders ?? false
   }
 }
 
@@ -32,7 +34,7 @@ async function loadFromInput() {
     return
   }
 
-  // Check if it's the same as current
+  // Check if it's the same as current and traverse hasn't changed
   if (path === currentDir.value) {
     inputError.value = null
     return
@@ -41,10 +43,11 @@ async function loadFromInput() {
   loading.value = true
   inputError.value = null
 
-  const result = await api.setDirectory(path)
+  const result = await api.setDirectory(path, traverseSubfolders.value)
   if (result) {
     currentDir.value = result.directory
     inputDir.value = result.directory
+    traverseSubfolders.value = result.traverse_subfolders ?? false
     // Refresh video list with new directory
     await videoStore.fetchVideos()
   } else {
@@ -72,10 +75,11 @@ async function browse(path?: string) {
 async function selectDirectory(path: string) {
   loading.value = true
   errorMsg.value = null
-  const result = await api.setDirectory(path)
+  const result = await api.setDirectory(path, traverseSubfolders.value)
   if (result) {
     currentDir.value = result.directory
     inputDir.value = result.directory
+    traverseSubfolders.value = result.traverse_subfolders ?? false
     showBrowser.value = false
     // Refresh video list with new directory
     await videoStore.fetchVideos()
@@ -83,6 +87,21 @@ async function selectDirectory(path: string) {
     errorMsg.value = api.error.value || 'Failed to set directory'
   }
   loading.value = false
+}
+
+async function onTraverseToggle(value: boolean) {
+  traverseSubfolders.value = value
+  // Apply the change immediately if we have a directory set
+  if (currentDir.value) {
+    loading.value = true
+    const result = await api.setDirectory(currentDir.value, value)
+    if (result) {
+      traverseSubfolders.value = result.traverse_subfolders ?? false
+      // Refresh video list with updated traverse setting
+      await videoStore.fetchVideos()
+    }
+    loading.value = false
+  }
 }
 
 function openBrowser() {
@@ -134,6 +153,17 @@ onMounted(() => {
       <p v-else class="text-xs text-dark-500 mt-2">
         Paste a path and press Enter or click Load. Videos and captions use this directory.
       </p>
+    </div>
+
+    <!-- Traverse Subfolders Toggle -->
+    <div class="pt-2">
+      <BaseToggle
+        :model-value="traverseSubfolders"
+        label="Include Subfolders"
+        description="Search for videos in subdirectories recursively"
+        :disabled="loading"
+        @update:model-value="onTraverseToggle"
+      />
     </div>
 
     <!-- Directory Browser Modal -->

@@ -189,12 +189,14 @@ class UpdatePromptRequest(BaseModel):
 class DirectoryRequest(BaseModel):
     """Request to set working directory"""
     directory: str = Field(..., min_length=1)
+    traverse_subfolders: bool = False
 
 
 class DirectoryResponse(BaseModel):
     """Response for directory operations"""
     directory: str
     video_count: Optional[int] = None
+    traverse_subfolders: bool = False
 
 
 class DirectoryBrowseResponse(BaseModel):

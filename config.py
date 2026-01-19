@@ -21,6 +21,7 @@ MODELS_DIR.mkdir(exist_ok=True)
 # =============================================================================
 
 _current_working_dir: Optional[Path] = None
+_traverse_subfolders: bool = False
 
 # Default to user's home directory
 _default_working_dir = Path.home()
@@ -40,6 +41,17 @@ def set_working_directory(path: Path) -> None:
 def get_working_directory_str() -> str:
     """Returns current working directory as string"""
     return str(get_working_directory())
+
+
+def get_traverse_subfolders() -> bool:
+    """Returns whether to traverse subfolders when finding videos"""
+    return _traverse_subfolders
+
+
+def set_traverse_subfolders(traverse: bool) -> None:
+    """Set whether to traverse subfolders when finding videos"""
+    global _traverse_subfolders
+    _traverse_subfolders = traverse
 
 # =============================================================================
 # MODEL SETTINGS

@@ -215,10 +215,12 @@ async def get_gpu_info():
 async def get_directory():
     """Get current working directory"""
     working_dir = config.get_working_directory()
-    videos = find_videos(working_dir)
+    traverse = config.get_traverse_subfolders()
+    videos = find_videos(working_dir, traverse_subfolders=traverse)
     return DirectoryResponse(
         directory=str(working_dir),
-        video_count=len(videos)
+        video_count=len(videos),
+        traverse_subfolders=traverse
     )
 
 
@@ -236,16 +238,18 @@ async def set_directory(request: DirectoryRequest):
     if not path.is_dir():
         raise HTTPException(status_code=400, detail="Path is not a directory")
 
-    # Set the working directory
+    # Set the working directory and traverse option
     config.set_working_directory(path)
-    print(f"[API] Working directory set to: {path}")
+    config.set_traverse_subfolders(request.traverse_subfolders)
+    print(f"[API] Working directory set to: {path} (traverse_subfolders={request.traverse_subfolders})")
 
     # Count videos in new directory
-    videos = find_videos(path)
+    videos = find_videos(path, traverse_subfolders=request.traverse_subfolders)
 
     return DirectoryResponse(
         directory=str(path),
-        video_count=len(videos)
+        video_count=len(videos),
+        traverse_subfolders=request.traverse_subfolders
     )
 
 
@@ -368,7 +372,7 @@ async def delete_prompt(prompt_id: str):
 # Video Endpoints
 # ============================================================================
 
-def get_video_info_fast(video_path: Path) -> VideoInfo:
+def get_video_info_fast(video_path: Path, working_dir: Path = None) -> VideoInfo:
     """Get video info without calling ffprobe - much faster for large libraries"""
     # Captions are saved in the same directory as the video
     caption_path = video_path.parent / (video_path.stem + config.OUTPUT_EXTENSION)
@@ -384,8 +388,20 @@ def get_video_info_fast(video_path: Path) -> VideoInfo:
             pass
 
     stat = video_path.stat()
+
+    # Use relative path from working directory if provided, otherwise just the filename
+    # Always use forward slashes for consistency with frontend URLs
+    if working_dir:
+        try:
+            relative_path = video_path.relative_to(working_dir)
+            name = str(relative_path).replace('\\', '/')
+        except ValueError:
+            name = video_path.name
+    else:
+        name = video_path.name
+
     return VideoInfo(
-        name=video_path.name,
+        name=name,
         path=str(video_path),
         size_mb=stat.st_size / (1024 * 1024),
         duration_sec=None,  # Skip ffprobe for speed
@@ -403,7 +419,8 @@ async def stream_videos():
     """Stream videos as Server-Sent Events for progressive loading"""
     async def generate():
         working_dir = config.get_working_directory()
-        videos = find_videos(working_dir)
+        traverse = config.get_traverse_subfolders()
+        videos = find_videos(working_dir, traverse_subfolders=traverse)
         total = len(videos)
         batch_size = 100
 
@@ -414,7 +431,7 @@ async def stream_videos():
         batch = []
         for i, video_path in enumerate(videos):
             try:
-                video_info = get_video_info_fast(video_path)
+                video_info = get_video_info_fast(video_path, working_dir)
                 batch.append(video_info.model_dump())
 
                 # Send batch when full or at end
@@ -442,14 +459,15 @@ async def stream_videos():
 async def list_videos(fast: bool = True):
     """List all videos in working directory"""
     working_dir = config.get_working_directory()
-    videos = find_videos(working_dir)
+    traverse = config.get_traverse_subfolders()
+    videos = find_videos(working_dir, traverse_subfolders=traverse)
     video_infos = []
 
     for video_path in videos:
         try:
             if fast:
                 # Fast mode: skip ffprobe
-                video_infos.append(get_video_info_fast(video_path))
+                video_infos.append(get_video_info_fast(video_path, working_dir))
             else:
                 # Slow mode: get full video metadata
                 info = get_video_info(video_path)
@@ -466,8 +484,16 @@ async def list_videos(fast: bool = True):
                     except Exception:
                         pass
 
+                # Use relative path from working directory
+                # Always use forward slashes for consistency with frontend URLs
+                try:
+                    relative_path = video_path.relative_to(working_dir)
+                    name = str(relative_path).replace('\\', '/')
+                except ValueError:
+                    name = video_path.name
+
                 video_infos.append(VideoInfo(
-                    name=video_path.name,
+                    name=name,
                     path=str(video_path),
                     size_mb=video_path.stat().st_size / (1024 * 1024),
                     duration_sec=info.get("duration"),
@@ -508,7 +534,7 @@ async def upload_video(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/api/videos/{video_name}")
+@app.delete("/api/videos/{video_name:path}")
 async def delete_video(video_name: str):
     """Delete a video file from working directory"""
     working_dir = config.get_working_directory()
@@ -558,7 +584,7 @@ def generate_thumbnail(video_path: Path, output_path: Path, size: int = 160) -> 
         return False
 
 
-@app.get("/api/videos/{video_name}/thumbnail")
+@app.get("/api/videos/{video_name:path}/thumbnail")
 async def get_video_thumbnail(video_name: str, size: int = 160):
     """Get thumbnail for a video. Generates and caches if not exists."""
     # Clamp size to reasonable bounds
@@ -602,7 +628,7 @@ async def clear_thumbnail_cache():
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/videos/{video_name}/stream")
+@app.get("/api/videos/{video_name:path}/stream")
 async def stream_video(video_name: str):
     """Stream video file for preview playback"""
     working_dir = config.get_working_directory()
@@ -641,16 +667,29 @@ async def list_captions():
     """List all generated captions in working directory"""
     captions = []
     working_dir = config.get_working_directory()
+    traverse = config.get_traverse_subfolders()
+
+    # Use recursive glob if traverse is enabled
+    glob_pattern = f"**/*{config.OUTPUT_EXTENSION}" if traverse else f"*{config.OUTPUT_EXTENSION}"
 
     if working_dir.exists():
-        for caption_path in working_dir.glob(f"*{config.OUTPUT_EXTENSION}"):
+        for caption_path in working_dir.glob(glob_pattern):
             try:
                 with open(caption_path, "r", encoding="utf-8") as f:
                     text = f.read()
 
                 stat = caption_path.stat()
+
+                # Use relative path from working directory if traversing
+                # Always use forward slashes for consistency with frontend URLs
+                try:
+                    relative_path = caption_path.relative_to(working_dir)
+                    video_name = str(relative_path.with_suffix('')).replace('\\', '/')
+                except ValueError:
+                    video_name = caption_path.stem
+
                 captions.append(CaptionInfo(
-                    video_name=caption_path.stem,
+                    video_name=video_name,
                     caption_path=str(caption_path),
                     caption_text=text,
                     created_at=datetime.fromtimestamp(stat.st_mtime).isoformat(),
@@ -661,13 +700,13 @@ async def list_captions():
     return CaptionListResponse(captions=captions, total_count=len(captions))
 
 
-@app.get("/api/captions/{video_name}")
+@app.get("/api/captions/{video_name:path}")
 async def get_caption(video_name: str):
     """Get caption for a specific video"""
-    # Remove extension if provided
-    stem = Path(video_name).stem
     working_dir = config.get_working_directory()
-    caption_path = working_dir / (stem + config.OUTPUT_EXTENSION)
+    # Construct path relative to working directory, then get the caption path
+    video_path = working_dir / video_name
+    caption_path = video_path.parent / (video_path.stem + config.OUTPUT_EXTENSION)
 
     if not caption_path.exists():
         raise HTTPException(status_code=404, detail="Caption not found")
@@ -677,7 +716,7 @@ async def get_caption(video_name: str):
             text = f.read()
 
         return CaptionInfo(
-            video_name=stem,
+            video_name=video_path.stem,
             caption_path=str(caption_path),
             caption_text=text,
             created_at=datetime.fromtimestamp(caption_path.stat().st_mtime).isoformat(),
@@ -686,19 +725,20 @@ async def get_caption(video_name: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.delete("/api/captions/{video_name}")
+@app.delete("/api/captions/{video_name:path}")
 async def delete_caption(video_name: str):
     """Delete a caption file from working directory"""
-    stem = Path(video_name).stem
     working_dir = config.get_working_directory()
-    caption_path = working_dir / (stem + config.OUTPUT_EXTENSION)
+    # Construct path relative to working directory, then get the caption path
+    video_path = working_dir / video_name
+    caption_path = video_path.parent / (video_path.stem + config.OUTPUT_EXTENSION)
 
     if not caption_path.exists():
         raise HTTPException(status_code=404, detail="Caption not found")
 
     try:
         caption_path.unlink()
-        return {"success": True, "deleted": stem}
+        return {"success": True, "deleted": video_path.stem}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -770,15 +810,26 @@ async def start_processing(request: ProcessingRequest = None):
 
     # Get videos to process from working directory
     working_dir = config.get_working_directory()
-    all_videos = find_videos(working_dir)
-    print(f"[API] Found {len(all_videos)} videos in {working_dir}")
+    traverse = config.get_traverse_subfolders()
+    all_videos = find_videos(working_dir, traverse_subfolders=traverse)
+    print(f"[API] Found {len(all_videos)} videos in {working_dir} (traverse={traverse})")
 
     if request and request.video_names:
-        # Filter to specific videos
-        video_names_lower = {n.lower() for n in request.video_names}
+        # Filter to specific videos - match on relative path when traversing subfolders
+        # Normalize path separators to forward slashes for cross-platform compatibility
+        video_names_lower = {n.replace('\\', '/').lower() for n in request.video_names}
         print(f"[API] Filtering to specific videos: {request.video_names}")
-        videos = [v for v in all_videos if v.name.lower() in video_names_lower]
-        print(f"[API] After filtering: {[v.name for v in videos]}")
+
+        def get_relative_name(v: Path) -> str:
+            """Get relative path from working directory for matching"""
+            try:
+                # Use forward slashes for consistency with frontend
+                return str(v.relative_to(working_dir)).replace('\\', '/').lower()
+            except ValueError:
+                return v.name.lower()
+
+        videos = [v for v in all_videos if get_relative_name(v) in video_names_lower]
+        print(f"[API] After filtering: {[get_relative_name(v) for v in videos]}")
     else:
         videos = all_videos
 

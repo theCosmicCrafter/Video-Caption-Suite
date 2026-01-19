@@ -28,13 +28,22 @@ const videoRef = ref<HTMLVideoElement | null>(null)
 const videoReady = ref(false)
 const videoProgress = ref(0)
 
+/**
+ * Encode a video path for URL use, preserving directory structure.
+ * Encodes each path segment individually to handle special characters
+ * while keeping forward slashes intact for proper URL routing.
+ */
+function encodeVideoPath(path: string): string {
+  return path.split('/').map(segment => encodeURIComponent(segment)).join('/')
+}
+
 const thumbnailUrl = computed(() => {
   if (!props.showThumbnail || thumbnailError.value) return null
-  return `/api/videos/${encodeURIComponent(props.video.name)}/thumbnail?size=${props.thumbnailSize}`
+  return `/api/videos/${encodeVideoPath(props.video.name)}/thumbnail?size=${props.thumbnailSize}`
 })
 
 const videoPreviewUrl = computed(() => {
-  return `/api/videos/${encodeURIComponent(props.video.name)}/stream`
+  return `/api/videos/${encodeVideoPath(props.video.name)}/stream`
 })
 
 const formattedSize = computed(() => {

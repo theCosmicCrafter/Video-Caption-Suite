@@ -1,5 +1,5 @@
 export { default as ModelSettings } from './ModelSettings.vue'
 export { default as InferenceSettings } from './InferenceSettings.vue'
-export { default as OptimizationSettings } from './OptimizationSettings.vue'
 export { default as PromptSettings } from './PromptSettings.vue'
 export { default as SettingsPanel } from './SettingsPanel.vue'
+export { default as DirectorySettings } from './DirectorySettings.vue'

@@ -158,12 +158,13 @@ def resize_image(
     return image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
 
-def find_videos(directory: Path = None) -> List[Path]:
+def find_videos(directory: Path = None, traverse_subfolders: bool = False) -> List[Path]:
     """
     Find all video files in a directory.
 
     Args:
         directory: Directory to search (default: config.INPUT_DIR)
+        traverse_subfolders: If True, recursively search subdirectories
 
     Returns:
         List of video file paths
@@ -174,19 +175,23 @@ def find_videos(directory: Path = None) -> List[Path]:
         return []
 
     videos = []
+    # Use ** for recursive glob if traverse_subfolders is True
+    glob_pattern = "**/*{}" if traverse_subfolders else "*{}"
+
     for ext in config.VIDEO_EXTENSIONS:
-        videos.extend(directory.glob(f"*{ext}"))
+        videos.extend(directory.glob(glob_pattern.format(ext)))
 
     # Remove duplicates (Windows is case-insensitive) and sort
     seen = set()
     unique_videos = []
     for v in videos:
-        key = v.name.lower()
+        # Use full path for uniqueness when traversing subfolders
+        key = str(v).lower() if traverse_subfolders else v.name.lower()
         if key not in seen:
             seen.add(key)
             unique_videos.append(v)
 
-    unique_videos.sort(key=lambda p: p.name.lower())
+    unique_videos.sort(key=lambda p: str(p).lower())
     return unique_videos
 
 
