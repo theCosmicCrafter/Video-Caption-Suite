@@ -394,7 +394,7 @@ onUnmounted(() => {
           variant="primary"
           size="sm"
           :loading="startingProcess"
-          :disabled="selectedVideos.size === 0 && pendingVideos === 0"
+          :disabled="selectedVideos.size === 0 && videos.length === 0"
           @click="handleStartProcessing"
         >
           <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

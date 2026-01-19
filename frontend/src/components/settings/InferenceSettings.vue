@@ -4,6 +4,7 @@ import { useSettingsStore } from '@/stores/settingsStore'
 import { BaseSlider, BaseToggle } from '@/components/base'
 
 const settingsStore = useSettingsStore()
+
 const { settings, hasMultiGPU, maxBatchSize, gpuInfo } = storeToRefs(settingsStore)
 
 function updateMaxFrames(value: number) {

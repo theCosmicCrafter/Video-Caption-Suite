@@ -29,7 +29,7 @@ from backend.schemas import (
     CaptionInfo, CaptionListResponse, ProcessingRequest, ProcessingResponse,
     ModelStatus, ErrorResponse, ProcessingStage, GPUInfoResponse,
     SavedPrompt, PromptLibrary, CreatePromptRequest, UpdatePromptRequest,
-    DirectoryRequest, DirectoryResponse, DirectoryBrowseResponse
+    DirectoryRequest, DirectoryResponse, DirectoryBrowseResponse,
 )
 from backend.gpu_utils import get_system_info
 from backend.processing import ProcessingManager
