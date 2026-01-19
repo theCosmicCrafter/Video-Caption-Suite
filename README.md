@@ -58,6 +58,16 @@ Edit `config.py` to adjust:
 | `MAX_TOKENS` | 512 | Max caption length |
 | `TEMPERATURE` | 0.3 | Generation creativity |
 
+## Multi-GPU Processing
+
+On systems with multiple CUDA GPUs, the suite automatically detects available devices and enables parallel processing:
+
+- **Auto-detection**: GPUs are detected on startup via `/api/system/gpu`
+- **Batch size**: Set how many videos to process simultaneously (1 per GPU, max 8)
+- **Parallel workers**: Each GPU loads its own model copy and processes videos independently
+
+The batch size slider appears in Settings → Optimization only when multiple GPUs are detected. Each GPU requires ~16GB VRAM to hold the Qwen3-VL-8B model.
+
 ## Project Structure
 
 ```

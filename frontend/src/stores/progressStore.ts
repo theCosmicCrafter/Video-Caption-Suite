@@ -13,11 +13,26 @@ export const useProgressStore = defineStore('progress', () => {
   const isComplete = computed(() => state.value.stage === 'complete')
   const hasError = computed(() => state.value.stage === 'error')
 
+  const isMultiGPU = computed(() => state.value.batch_size > 1)
+
   const overallProgress = computed(() => {
     if (state.value.total_videos === 0) return 0
-    const videoProgress = state.value.video_index / state.value.total_videos
-    const substageProgress = state.value.substage_progress / state.value.total_videos
-    return Math.min(100, (videoProgress + substageProgress) * 100)
+
+    // For multi-GPU: use completed_videos for accurate tracking
+    const completedProgress = state.value.completed_videos / state.value.total_videos
+
+    // Add partial progress from active workers
+    let activeProgress = 0
+    if (state.value.workers && state.value.workers.length > 0) {
+      const activeWorkers = state.value.workers.filter(w => w.current_video)
+      activeProgress = activeWorkers.reduce((sum, w) => sum + w.substage_progress, 0)
+        / state.value.total_videos
+    } else {
+      // Single GPU fallback
+      activeProgress = state.value.substage_progress / state.value.total_videos
+    }
+
+    return Math.min(100, (completedProgress + activeProgress) * 100)
   })
 
   const currentVideoProgress = computed(() => {
@@ -32,10 +47,15 @@ export const useProgressStore = defineStore('progress', () => {
   })
 
   const estimatedTimeRemaining = computed(() => {
-    if (state.value.video_index === 0 || state.value.elapsed_time === 0) return null
+    // Use completed_videos for multi-GPU, video_index for single GPU
+    const completedCount = state.value.completed_videos > 0
+      ? state.value.completed_videos
+      : state.value.video_index
 
-    const avgTimePerVideo = state.value.elapsed_time / state.value.video_index
-    const remainingVideos = state.value.total_videos - state.value.video_index
+    if (completedCount === 0 || state.value.elapsed_time === 0) return null
+
+    const avgTimePerVideo = state.value.elapsed_time / completedCount
+    const remainingVideos = state.value.total_videos - completedCount
     const remainingSeconds = Math.floor(avgTimePerVideo * remainingVideos)
 
     const mins = Math.floor(remainingSeconds / 60)
@@ -63,6 +83,7 @@ export const useProgressStore = defineStore('progress', () => {
     isProcessing,
     isComplete,
     hasError,
+    isMultiGPU,
     overallProgress,
     currentVideoProgress,
     formattedElapsedTime,

@@ -27,10 +27,11 @@ import config
 from backend.schemas import (
     Settings, SettingsUpdate, ProgressUpdate, VideoInfo, VideoListResponse,
     CaptionInfo, CaptionListResponse, ProcessingRequest, ProcessingResponse,
-    ModelStatus, ErrorResponse, ProcessingStage,
+    ModelStatus, ErrorResponse, ProcessingStage, GPUInfoResponse,
     SavedPrompt, PromptLibrary, CreatePromptRequest, UpdatePromptRequest,
     DirectoryRequest, DirectoryResponse, DirectoryBrowseResponse
 )
+from backend.gpu_utils import get_system_info
 from backend.processing import ProcessingManager
 from video_processor import find_videos, get_video_info
 
@@ -123,6 +124,19 @@ async def lifespan(app: FastAPI):
     print(f"[API] Settings loaded from {SETTINGS_FILE}" if SETTINGS_FILE.exists() else "[API] Using default settings")
     print(f"[API] Prompt library loaded with {len(_prompt_library.prompts)} prompts")
 
+    # Detect GPUs and validate batch_size
+    gpu_info = get_system_info()
+    print(f"[API] Detected {gpu_info['gpu_count']} GPU(s)")
+    for gpu in gpu_info['gpus']:
+        print(f"[API]   - {gpu['name']} ({gpu['memory_total_gb']:.1f} GB)")
+
+    # Validate batch_size against available GPUs
+    max_batch = gpu_info['max_batch_size']
+    if _settings.batch_size > max_batch:
+        print(f"[API] Adjusting batch_size from {_settings.batch_size} to {max_batch} (max available)")
+        _settings.batch_size = max_batch
+        save_settings(_settings)
+
     yield
 
     # Shutdown
@@ -180,6 +194,17 @@ async def reset_settings():
     _settings = Settings()
     save_settings(_settings)
     return _settings
+
+
+# ============================================================================
+# System Endpoints
+# ============================================================================
+
+@app.get("/api/system/gpu", response_model=GPUInfoResponse)
+async def get_gpu_info():
+    """Get GPU information for frontend"""
+    info = get_system_info()
+    return GPUInfoResponse(**info)
 
 
 # ============================================================================

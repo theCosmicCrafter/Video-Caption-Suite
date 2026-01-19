@@ -3,7 +3,7 @@ Pydantic schemas for API request/response models
 """
 
 from pydantic import BaseModel, Field
-from typing import Optional, List, Literal
+from typing import Optional, List, Dict, Any, Literal
 from enum import Enum
 
 
@@ -45,6 +45,7 @@ class Settings(BaseModel):
     use_sage_attention: bool = False
     use_torch_compile: bool = True
     include_metadata: bool = False
+    batch_size: int = Field(default=1, ge=1, le=8)
     prompt: str = """Describe this video in detail. Include:
 - The main subject and their actions
 - The setting and environment
@@ -65,7 +66,17 @@ class SettingsUpdate(BaseModel):
     use_sage_attention: Optional[bool] = None
     use_torch_compile: Optional[bool] = None
     include_metadata: Optional[bool] = None
+    batch_size: Optional[int] = Field(default=None, ge=1, le=8)
     prompt: Optional[str] = None
+
+
+class WorkerProgress(BaseModel):
+    """Progress for a single GPU worker"""
+    worker_id: int
+    device: str
+    current_video: Optional[str] = None
+    substage: ProcessingSubstage = ProcessingSubstage.IDLE
+    substage_progress: float = 0.0
 
 
 class ProgressUpdate(BaseModel):
@@ -82,6 +93,10 @@ class ProgressUpdate(BaseModel):
     substage_progress: float = Field(default=0.0, ge=0.0, le=1.0)
     error_message: Optional[str] = None
     elapsed_time: float = 0.0
+    # Multi-GPU fields
+    batch_size: int = 1
+    workers: List[WorkerProgress] = []
+    completed_videos: int = 0
 
 
 class VideoInfo(BaseModel):
@@ -187,3 +202,12 @@ class DirectoryBrowseResponse(BaseModel):
     current: str
     parent: Optional[str] = None
     directories: List[dict]  # List of {name: str, path: str}
+
+
+class GPUInfoResponse(BaseModel):
+    """GPU information for frontend"""
+    gpu_count: int
+    gpus: List[Dict[str, Any]]
+    cuda_available: bool
+    cuda_version: Optional[str] = None
+    max_batch_size: int

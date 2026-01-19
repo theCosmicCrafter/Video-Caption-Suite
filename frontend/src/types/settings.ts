@@ -12,6 +12,7 @@ export interface Settings {
   use_sage_attention: boolean
   use_torch_compile: boolean
   include_metadata: boolean
+  batch_size: number
   prompt: string
 }
 
@@ -26,6 +27,7 @@ export interface SettingsUpdate {
   use_sage_attention?: boolean
   use_torch_compile?: boolean
   include_metadata?: boolean
+  batch_size?: number
   prompt?: string
 }
 
@@ -40,12 +42,30 @@ export const defaultSettings: Settings = {
   use_sage_attention: false,
   use_torch_compile: true,
   include_metadata: false,
+  batch_size: 1,
   prompt: `Describe this video in detail. Include:
 - The main subject and their actions
 - The setting and environment
 - Any notable objects or elements
 - The overall mood or atmosphere
 - Any text visible in the video`,
+}
+
+// GPU info types
+export interface GPUInfo {
+  index: number
+  name: string
+  memory_total_gb: number
+  memory_free_gb: number
+  device: string
+}
+
+export interface SystemGPUInfo {
+  gpu_count: number
+  gpus: GPUInfo[]
+  cuda_available: boolean
+  cuda_version: string | null
+  max_batch_size: number
 }
 
 // Prompt Library types
