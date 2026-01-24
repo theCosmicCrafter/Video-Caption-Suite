@@ -76,6 +76,10 @@ const formattedFrameCount = computed(() => {
   return `${props.video.frame_count.toLocaleString()}f`
 })
 
+const isImage = computed(() => {
+  return props.video.media_type === 'image'
+})
+
 function handleThumbnailError() {
   thumbnailError.value = true
 }
@@ -151,21 +155,24 @@ onUnmounted(() => {
   >
     <!-- Thumbnail/Video preview area - takes remaining space -->
     <div class="relative flex-1 min-h-0 bg-dark-800 overflow-hidden">
-      <!-- Thumbnail image (shown when not hovering) -->
+      <!-- Thumbnail image (shown when not hovering for videos, always for images) -->
       <img
-        v-if="thumbnailUrl && !isHovering"
+        v-if="thumbnailUrl && (!isHovering || isImage)"
         :src="thumbnailUrl"
         :alt="video.name"
-        class="absolute inset-0 w-full h-full object-cover z-0"
-        :class="thumbnailLoaded ? 'opacity-100' : 'opacity-0'"
+        class="absolute inset-0 w-full h-full object-cover z-0 transition-transform duration-300"
+        :class="[
+          thumbnailLoaded ? 'opacity-100' : 'opacity-0',
+          isImage && isHovering ? 'scale-110' : 'scale-100'
+        ]"
         loading="lazy"
         @error="handleThumbnailError"
         @load="handleThumbnailLoad"
       />
 
-      <!-- Video preview (shown on hover) - higher z-index -->
+      <!-- Video preview (shown on hover for videos only) - higher z-index -->
       <video
-        v-if="isHovering"
+        v-if="isHovering && !isImage"
         ref="videoRef"
         :src="videoPreviewUrl"
         class="absolute inset-0 w-full h-full object-cover z-10"
@@ -179,9 +186,9 @@ onUnmounted(() => {
         @timeupdate="handleVideoTimeUpdate"
       />
 
-      <!-- Video progress bar -->
+      <!-- Video progress bar (only for videos) -->
       <div
-        v-if="isHovering"
+        v-if="isHovering && !isImage"
         class="absolute bottom-0 left-0 right-0 h-1 bg-black/40 z-20"
       >
         <div
@@ -190,32 +197,47 @@ onUnmounted(() => {
         />
       </div>
 
-      <!-- Fallback video icon -->
+      <!-- Fallback icon (video or image) -->
       <div
         v-if="(!thumbnailUrl || !thumbnailLoaded) && !isHovering"
         class="absolute inset-0 flex items-center justify-center bg-dark-800"
       >
-        <svg class="w-1/4 max-w-12 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Image icon -->
+        <svg v-if="isImage" class="w-1/4 max-w-12 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <!-- Video icon -->
+        <svg v-else class="w-1/4 max-w-12 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
             d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
         </svg>
       </div>
 
-      <!-- Play indicator on hover -->
+      <!-- Play indicator on hover (only for videos) -->
       <div
-        v-if="isHovering"
+        v-if="isHovering && !isImage"
         class="absolute top-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-black/60 rounded text-[9px] text-white/80 flex items-center gap-1"
       >
         <span class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse" />
         PREVIEW
       </div>
 
-      <!-- Duration badge -->
+      <!-- Duration badge (videos) or Image badge (images) -->
       <div
-        v-if="formattedDuration && !isHovering"
-        class="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-medium bg-black/70 text-white rounded"
+        v-if="!isHovering && (formattedDuration || isImage)"
+        class="absolute bottom-1 right-1 px-1.5 py-0.5 text-[10px] font-medium bg-black/70 text-white rounded flex items-center gap-1"
       >
-        {{ formattedDuration }}
+        <template v-if="isImage">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+          IMG
+        </template>
+        <template v-else>
+          {{ formattedDuration }}
+        </template>
       </div>
 
       <!-- Selection checkbox -->
@@ -278,13 +300,15 @@ onUnmounted(() => {
         {{ video.name }}
       </h4>
 
-      <!-- Meta row 1: Resolution, FPS, Frames -->
+      <!-- Meta row 1: Resolution, FPS, Frames (FPS/Frames for videos only) -->
       <div class="flex items-center gap-1.5 mt-1 text-[10px] text-dark-500 truncate">
         <span v-if="formattedResolution">{{ formattedResolution }}</span>
-        <span v-if="formattedResolution && formattedFps" class="text-dark-600">·</span>
-        <span v-if="formattedFps">{{ formattedFps }}</span>
-        <span v-if="formattedFps && formattedFrameCount" class="text-dark-600">·</span>
-        <span v-if="formattedFrameCount">{{ formattedFrameCount }}</span>
+        <template v-if="!isImage">
+          <span v-if="formattedResolution && formattedFps" class="text-dark-600">·</span>
+          <span v-if="formattedFps">{{ formattedFps }}</span>
+          <span v-if="formattedFps && formattedFrameCount" class="text-dark-600">·</span>
+          <span v-if="formattedFrameCount">{{ formattedFrameCount }}</span>
+        </template>
       </div>
 
       <!-- Meta row 2: Size and caption button -->

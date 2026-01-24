@@ -7,6 +7,7 @@ Complete reference for all configuration options in Video Caption Suite.
 | File | Purpose |
 |------|---------|
 | `config.py` | Backend Python settings |
+| `user_config.json` | User working directory and preferences (auto-generated, persisted) |
 | `settings.json` | Persisted user settings (auto-generated) |
 | `prompts.json` | Saved prompt library (auto-generated) |
 | `frontend/vite.config.ts` | Frontend build configuration |
@@ -78,10 +79,10 @@ USE_TORCH_COMPILE = True
 ### Directory Settings
 
 ```python
-# Default working directory
+# Default working directory (persisted to user_config.json)
 WORKING_DIRECTORY = None  # Set via API
 
-# Search subfolders for videos
+# Search subfolders for videos (persisted to user_config.json)
 TRAVERSE_SUBFOLDERS = False
 
 # Model download/cache location
@@ -91,12 +92,14 @@ MODELS_DIR = Path("./models")
 OUTPUT_EXTENSION = ".txt"
 ```
 
-| Setting | Type | Default | Description |
-|---------|------|---------|-------------|
-| `WORKING_DIRECTORY` | str/None | `None` | Video source folder |
-| `TRAVERSE_SUBFOLDERS` | bool | `False` | Recursively search subfolders |
-| `MODELS_DIR` | Path | `./models` | Model download location |
-| `OUTPUT_EXTENSION` | str | `.txt` | Caption file extension |
+| Setting | Type | Default | Persisted | Description |
+|---------|------|---------|-----------|-------------|
+| `WORKING_DIRECTORY` | str/None | `None` | Yes | Video source folder |
+| `TRAVERSE_SUBFOLDERS` | bool | `False` | Yes | Recursively search subfolders |
+| `MODELS_DIR` | Path | `./models` | No | Model download location |
+| `OUTPUT_EXTENSION` | str | `.txt` | No | Caption file extension |
+
+**Note:** Working directory and traverse subfolders settings are automatically saved to `user_config.json` when changed and restored on server restart.
 
 ### Server Settings
 
@@ -107,6 +110,40 @@ API_PORT = 8000
 # API server host
 API_HOST = "0.0.0.0"
 ```
+
+---
+
+## User Config (user_config.json)
+
+**Location:** Project root (auto-generated)
+
+Stores the user's working directory, folder preferences, and media type filters. Automatically loaded on server startup and saved when settings change.
+
+```json
+{
+  "working_directory": "C:/Videos/MyProject",
+  "traverse_subfolders": false,
+  "include_videos": true,
+  "include_images": false
+}
+```
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `working_directory` | string/null | `null` | Path to media source folder |
+| `traverse_subfolders` | bool | `false` | Whether to search subfolders |
+| `include_videos` | bool | `true` | Include video files in media list |
+| `include_images` | bool | `false` | Include image files in media list |
+
+**Supported Extensions:**
+- Videos: `.mp4`, `.avi`, `.mov`, `.mkv`, `.webm`, `.flv`, `.wmv`
+- Images: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.bmp`
+
+**Behavior:**
+- If `working_directory` path no longer exists, it is ignored and defaults to user's home directory
+- Settings are saved immediately when changed via the Directory settings in the UI
+- This file enables project resumption after server restarts
+- Media type filters determine which file types appear in the media grid
 
 ---
 

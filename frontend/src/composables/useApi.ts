@@ -126,10 +126,20 @@ export function useApi() {
     return request<DirectoryResponse>('/api/directory')
   }
 
-  async function setDirectory(directory: string, traverseSubfolders: boolean = false): Promise<DirectoryResponse | null> {
+  async function setDirectory(
+    directory: string,
+    traverseSubfolders: boolean = false,
+    includeVideos: boolean = true,
+    includeImages: boolean = false
+  ): Promise<DirectoryResponse | null> {
     return request<DirectoryResponse>('/api/directory', {
       method: 'POST',
-      body: JSON.stringify({ directory, traverse_subfolders: traverseSubfolders }),
+      body: JSON.stringify({
+        directory,
+        traverse_subfolders: traverseSubfolders,
+        include_videos: includeVideos,
+        include_images: includeImages,
+      }),
     })
   }
 

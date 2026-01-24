@@ -1,7 +1,10 @@
+export type MediaType = 'video' | 'image'
+
 export interface VideoInfo {
   name: string
   path: string
   size_mb: number
+  media_type: MediaType
   duration_sec: number | null
   width: number | null
   height: number | null

@@ -195,6 +195,89 @@ def find_videos(directory: Path = None, traverse_subfolders: bool = False) -> Li
     return unique_videos
 
 
+def find_images(directory: Path = None, traverse_subfolders: bool = False) -> List[Path]:
+    """
+    Find all image files in a directory.
+
+    Args:
+        directory: Directory to search
+        traverse_subfolders: If True, recursively search subdirectories
+
+    Returns:
+        List of image file paths
+    """
+    directory = directory or config.get_working_directory()
+
+    if not directory.exists():
+        return []
+
+    images = []
+    glob_pattern = "**/*{}" if traverse_subfolders else "*{}"
+
+    for ext in config.IMAGE_EXTENSIONS:
+        # Handle both lowercase and uppercase extensions
+        images.extend(directory.glob(glob_pattern.format(ext)))
+        images.extend(directory.glob(glob_pattern.format(ext.upper())))
+
+    # Remove duplicates (Windows is case-insensitive) and sort
+    seen = set()
+    unique_images = []
+    for img in images:
+        key = str(img).lower() if traverse_subfolders else img.name.lower()
+        if key not in seen:
+            seen.add(key)
+            unique_images.append(img)
+
+    unique_images.sort(key=lambda p: str(p).lower())
+    return unique_images
+
+
+def process_image(
+    image_path: Path,
+    frame_size: int = None,
+) -> Tuple[List[Image.Image], dict]:
+    """
+    Load and process an image file for captioning.
+
+    Args:
+        image_path: Path to image file
+        frame_size: Target size for resize
+
+    Returns:
+        Tuple of ([image], metadata_dict)
+    """
+    frame_size = frame_size or config.FRAME_SIZE
+    start_time = time.time()
+
+    # Load image with PIL
+    img = Image.open(image_path)
+
+    # Get original dimensions before conversion
+    width, height = img.size
+
+    # Convert to RGB if needed (handles RGBA, P mode, grayscale, etc.)
+    if img.mode != 'RGB':
+        img = img.convert('RGB')
+
+    # Resize
+    img = resize_image(img, max_size=frame_size)
+
+    process_time = time.time() - start_time
+
+    metadata = {
+        "path": str(image_path),
+        "name": image_path.name,
+        "width": width,
+        "height": height,
+        "frames_extracted": 1,
+        "frame_size": frame_size,
+        "process_time": process_time,
+        "media_type": "image",
+    }
+
+    return [img], metadata
+
+
 def process_video(
     video_path: Path,
     max_frames: int = None,

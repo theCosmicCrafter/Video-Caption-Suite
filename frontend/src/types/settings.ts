@@ -94,12 +94,17 @@ export interface UpdatePromptRequest {
 export interface DirectoryRequest {
   directory: string
   traverse_subfolders?: boolean
+  include_videos?: boolean
+  include_images?: boolean
 }
 
 export interface DirectoryResponse {
   directory: string
   video_count?: number
+  image_count?: number
   traverse_subfolders?: boolean
+  include_videos?: boolean
+  include_images?: boolean
 }
 
 export interface DirectoryBrowseResponse {

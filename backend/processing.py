@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.schemas import (
     Settings, ProgressUpdate, ProcessingStage, ProcessingSubstage,
-    VideoInfo, WorkerProgress
+    VideoInfo, WorkerProgress, MediaType
 )
 
 
@@ -267,10 +267,10 @@ class ProcessingManager:
         settings: Settings,
     ) -> List[Dict[str, Any]]:
         """
-        Process videos in parallel across multiple GPUs.
+        Process media (videos and images) in parallel across multiple GPUs.
         """
         from model_loader import generate_caption
-        from video_processor import process_video
+        from video_processor import process_video, process_image
         import config
 
         batch_size = min(settings.batch_size, len(videos))
@@ -339,18 +339,28 @@ class ProcessingManager:
                 }
 
                 try:
-                    # Extract frames
+                    # Extract frames (detect image vs video by extension)
                     worker.substage_progress = 0.2
                     await self.emit_progress()
 
-                    frames, video_meta = await loop.run_in_executor(
-                        None,
-                        lambda: process_video(
-                            video_path,
-                            max_frames=settings.max_frames,
-                            frame_size=settings.frame_size,
+                    is_image = video_path.suffix.lower() in config.IMAGE_EXTENSIONS
+                    if is_image:
+                        frames, video_meta = await loop.run_in_executor(
+                            None,
+                            lambda: process_image(
+                                video_path,
+                                frame_size=settings.frame_size,
+                            )
                         )
-                    )
+                    else:
+                        frames, video_meta = await loop.run_in_executor(
+                            None,
+                            lambda: process_video(
+                                video_path,
+                                max_frames=settings.max_frames,
+                                frame_size=settings.frame_size,
+                            )
+                        )
 
                     worker.substage = ProcessingSubstage.ENCODING
                     worker.substage_progress = 0.4
@@ -469,11 +479,11 @@ class ProcessingManager:
         settings: Settings,
     ) -> List[Dict[str, Any]]:
         """
-        Process a list of videos sequentially (original single-GPU behavior).
-        Returns list of results for each video.
+        Process a list of media files (videos and images) sequentially (original single-GPU behavior).
+        Returns list of results for each file.
         """
         from model_loader import generate_caption
-        from video_processor import process_video
+        from video_processor import process_video, process_image
         import config
 
         print(f"[ProcessingManager] process_videos called with {len(videos)} videos")
@@ -525,18 +535,28 @@ class ProcessingManager:
                 }
 
                 try:
-                    # Extract frames
+                    # Extract frames (detect image vs video by extension)
                     self.state.substage_progress = 0.2
                     await self.emit_progress()
 
-                    frames, video_meta = await loop.run_in_executor(
-                        None,
-                        lambda: process_video(
-                            video_path,
-                            max_frames=settings.max_frames,
-                            frame_size=settings.frame_size,
+                    is_image = video_path.suffix.lower() in config.IMAGE_EXTENSIONS
+                    if is_image:
+                        frames, video_meta = await loop.run_in_executor(
+                            None,
+                            lambda: process_image(
+                                video_path,
+                                frame_size=settings.frame_size,
+                            )
                         )
-                    )
+                    else:
+                        frames, video_meta = await loop.run_in_executor(
+                            None,
+                            lambda: process_video(
+                                video_path,
+                                max_frames=settings.max_frames,
+                                frame_size=settings.frame_size,
+                            )
+                        )
 
                     self.state.substage = ProcessingSubstage.ENCODING
                     self.state.substage_progress = 0.4

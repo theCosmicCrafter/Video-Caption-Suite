@@ -99,11 +99,18 @@ class ProgressUpdate(BaseModel):
     completed_videos: int = 0
 
 
+class MediaType(str, Enum):
+    """Type of media file"""
+    VIDEO = "video"
+    IMAGE = "image"
+
+
 class VideoInfo(BaseModel):
-    """Information about a video file"""
+    """Information about a media file (video or image)"""
     name: str
     path: str
     size_mb: float
+    media_type: MediaType = MediaType.VIDEO
     duration_sec: Optional[float] = None
     width: Optional[int] = None
     height: Optional[int] = None
@@ -190,13 +197,18 @@ class DirectoryRequest(BaseModel):
     """Request to set working directory"""
     directory: str = Field(..., min_length=1)
     traverse_subfolders: bool = False
+    include_videos: bool = True
+    include_images: bool = False
 
 
 class DirectoryResponse(BaseModel):
     """Response for directory operations"""
     directory: str
     video_count: Optional[int] = None
+    image_count: Optional[int] = None
     traverse_subfolders: bool = False
+    include_videos: bool = True
+    include_images: bool = False
 
 
 class DirectoryBrowseResponse(BaseModel):

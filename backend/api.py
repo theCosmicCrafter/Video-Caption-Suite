@@ -29,7 +29,7 @@ from backend.schemas import (
     CaptionInfo, CaptionListResponse, ProcessingRequest, ProcessingResponse,
     ModelStatus, ErrorResponse, ProcessingStage, GPUInfoResponse,
     SavedPrompt, PromptLibrary, CreatePromptRequest, UpdatePromptRequest,
-    DirectoryRequest, DirectoryResponse, DirectoryBrowseResponse,
+    DirectoryRequest, DirectoryResponse, DirectoryBrowseResponse, MediaType,
     # Analytics schemas
     StopwordPreset, WordFrequencyRequest, WordFrequencyResponse, WordFrequencyItem,
     NgramRequest, NgramResponse, NgramItem,
@@ -38,7 +38,7 @@ from backend.schemas import (
 )
 from backend.gpu_utils import get_system_info
 from backend.processing import ProcessingManager
-from video_processor import find_videos, get_video_info
+from video_processor import find_videos, find_images, get_video_info
 
 
 # Settings file path
@@ -218,20 +218,28 @@ async def get_gpu_info():
 
 @app.get("/api/directory", response_model=DirectoryResponse)
 async def get_directory():
-    """Get current working directory"""
+    """Get current working directory and media settings"""
     working_dir = config.get_working_directory()
     traverse = config.get_traverse_subfolders()
-    videos = find_videos(working_dir, traverse_subfolders=traverse)
+    include_videos = config.get_include_videos()
+    include_images = config.get_include_images()
+
+    videos = find_videos(working_dir, traverse_subfolders=traverse) if include_videos else []
+    images = find_images(working_dir, traverse_subfolders=traverse) if include_images else []
+
     return DirectoryResponse(
         directory=str(working_dir),
         video_count=len(videos),
-        traverse_subfolders=traverse
+        image_count=len(images),
+        traverse_subfolders=traverse,
+        include_videos=include_videos,
+        include_images=include_images
     )
 
 
 @app.post("/api/directory", response_model=DirectoryResponse)
 async def set_directory(request: DirectoryRequest):
-    """Set working directory - validates path exists"""
+    """Set working directory and media settings - validates path exists"""
     # Security: reject path traversal
     if ".." in request.directory:
         raise HTTPException(status_code=400, detail="Path traversal not allowed")
@@ -243,18 +251,24 @@ async def set_directory(request: DirectoryRequest):
     if not path.is_dir():
         raise HTTPException(status_code=400, detail="Path is not a directory")
 
-    # Set the working directory and traverse option
+    # Set the working directory and options
     config.set_working_directory(path)
     config.set_traverse_subfolders(request.traverse_subfolders)
-    print(f"[API] Working directory set to: {path} (traverse_subfolders={request.traverse_subfolders})")
+    config.set_include_videos(request.include_videos)
+    config.set_include_images(request.include_images)
+    print(f"[API] Working directory set to: {path} (traverse={request.traverse_subfolders}, videos={request.include_videos}, images={request.include_images})")
 
-    # Count videos in new directory
-    videos = find_videos(path, traverse_subfolders=request.traverse_subfolders)
+    # Count media in new directory
+    videos = find_videos(path, traverse_subfolders=request.traverse_subfolders) if request.include_videos else []
+    images = find_images(path, traverse_subfolders=request.traverse_subfolders) if request.include_images else []
 
     return DirectoryResponse(
         directory=str(path),
         video_count=len(videos),
-        traverse_subfolders=request.traverse_subfolders
+        image_count=len(images),
+        traverse_subfolders=request.traverse_subfolders,
+        include_videos=request.include_videos,
+        include_images=request.include_images
     )
 
 
@@ -377,10 +391,10 @@ async def delete_prompt(prompt_id: str):
 # Video Endpoints
 # ============================================================================
 
-def get_video_info_fast(video_path: Path, working_dir: Path = None) -> VideoInfo:
-    """Get video info without calling ffprobe - much faster for large libraries"""
-    # Captions are saved in the same directory as the video
-    caption_path = video_path.parent / (video_path.stem + config.OUTPUT_EXTENSION)
+def get_media_info_fast(media_path: Path, working_dir: Path = None, media_type: MediaType = MediaType.VIDEO) -> VideoInfo:
+    """Get media info without calling ffprobe - much faster for large libraries"""
+    # Captions are saved in the same directory as the media file
+    caption_path = media_path.parent / (media_path.stem + config.OUTPUT_EXTENSION)
     has_caption = caption_path.exists()
     caption_preview = None
 
@@ -392,52 +406,72 @@ def get_video_info_fast(video_path: Path, working_dir: Path = None) -> VideoInfo
         except Exception:
             pass
 
-    stat = video_path.stat()
+    stat = media_path.stat()
 
     # Use relative path from working directory if provided, otherwise just the filename
     # Always use forward slashes for consistency with frontend URLs
     if working_dir:
         try:
-            relative_path = video_path.relative_to(working_dir)
+            relative_path = media_path.relative_to(working_dir)
             name = str(relative_path).replace('\\', '/')
         except ValueError:
-            name = video_path.name
+            name = media_path.name
     else:
-        name = video_path.name
+        name = media_path.name
 
     return VideoInfo(
         name=name,
-        path=str(video_path),
+        path=str(media_path),
         size_mb=stat.st_size / (1024 * 1024),
+        media_type=media_type,
         duration_sec=None,  # Skip ffprobe for speed
         width=None,
         height=None,
-        frame_count=None,
+        frame_count=1 if media_type == MediaType.IMAGE else None,
         fps=None,
         has_caption=has_caption,
         caption_preview=caption_preview,
     )
 
 
+# Backward compatibility alias
+def get_video_info_fast(video_path: Path, working_dir: Path = None) -> VideoInfo:
+    """Get video info without calling ffprobe - much faster for large libraries"""
+    return get_media_info_fast(video_path, working_dir, MediaType.VIDEO)
+
+
 @app.get("/api/videos/stream")
 async def stream_videos():
-    """Stream videos as Server-Sent Events for progressive loading"""
+    """Stream media files as Server-Sent Events for progressive loading"""
     async def generate():
         working_dir = config.get_working_directory()
         traverse = config.get_traverse_subfolders()
-        videos = find_videos(working_dir, traverse_subfolders=traverse)
-        total = len(videos)
+        include_videos = config.get_include_videos()
+        include_images = config.get_include_images()
+
+        # Collect all media with their types
+        media_items = []
+        if include_videos:
+            for v in find_videos(working_dir, traverse_subfolders=traverse):
+                media_items.append((v, MediaType.VIDEO))
+        if include_images:
+            for img in find_images(working_dir, traverse_subfolders=traverse):
+                media_items.append((img, MediaType.IMAGE))
+
+        # Sort by name
+        media_items.sort(key=lambda x: str(x[0]).lower())
+        total = len(media_items)
         batch_size = 100
 
         # Send total count first
         yield f"data: {json.dumps({'type': 'total', 'count': total})}\n\n"
 
-        # Send videos in batches
+        # Send media in batches
         batch = []
-        for i, video_path in enumerate(videos):
+        for i, (media_path, media_type) in enumerate(media_items):
             try:
-                video_info = get_video_info_fast(video_path, working_dir)
-                batch.append(video_info.model_dump())
+                media_info = get_media_info_fast(media_path, working_dir, media_type)
+                batch.append(media_info.model_dump())
 
                 # Send batch when full or at end
                 if len(batch) >= batch_size or i == total - 1:
@@ -445,7 +479,7 @@ async def stream_videos():
                     batch = []
                     await asyncio.sleep(0)  # Allow other tasks to run
             except Exception as e:
-                print(f"[API] Error getting info for {video_path}: {e}")
+                print(f"[API] Error getting info for {media_path}: {e}")
 
         # Send done signal
         yield f"data: {json.dumps({'type': 'done'})}\n\n"

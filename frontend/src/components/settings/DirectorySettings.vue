@@ -17,6 +17,8 @@ const loading = ref(false)
 const errorMsg = ref<string | null>(null)
 const inputError = ref<string | null>(null)
 const traverseSubfolders = ref<boolean>(false)
+const includeVideos = ref<boolean>(true)
+const includeImages = ref<boolean>(false)
 
 async function loadCurrentDirectory() {
   const result = await api.getDirectory()
@@ -24,6 +26,8 @@ async function loadCurrentDirectory() {
     currentDir.value = result.directory
     inputDir.value = result.directory
     traverseSubfolders.value = result.traverse_subfolders ?? false
+    includeVideos.value = result.include_videos ?? true
+    includeImages.value = result.include_images ?? false
   }
 }
 
@@ -43,11 +47,13 @@ async function loadFromInput() {
   loading.value = true
   inputError.value = null
 
-  const result = await api.setDirectory(path, traverseSubfolders.value)
+  const result = await api.setDirectory(path, traverseSubfolders.value, includeVideos.value, includeImages.value)
   if (result) {
     currentDir.value = result.directory
     inputDir.value = result.directory
     traverseSubfolders.value = result.traverse_subfolders ?? false
+    includeVideos.value = result.include_videos ?? true
+    includeImages.value = result.include_images ?? false
     // Refresh video list with new directory
     await videoStore.fetchVideos()
   } else {
@@ -75,11 +81,13 @@ async function browse(path?: string) {
 async function selectDirectory(path: string) {
   loading.value = true
   errorMsg.value = null
-  const result = await api.setDirectory(path, traverseSubfolders.value)
+  const result = await api.setDirectory(path, traverseSubfolders.value, includeVideos.value, includeImages.value)
   if (result) {
     currentDir.value = result.directory
     inputDir.value = result.directory
     traverseSubfolders.value = result.traverse_subfolders ?? false
+    includeVideos.value = result.include_videos ?? true
+    includeImages.value = result.include_images ?? false
     showBrowser.value = false
     // Refresh video list with new directory
     await videoStore.fetchVideos()
@@ -94,10 +102,40 @@ async function onTraverseToggle(value: boolean) {
   // Apply the change immediately if we have a directory set
   if (currentDir.value) {
     loading.value = true
-    const result = await api.setDirectory(currentDir.value, value)
+    const result = await api.setDirectory(currentDir.value, value, includeVideos.value, includeImages.value)
     if (result) {
       traverseSubfolders.value = result.traverse_subfolders ?? false
       // Refresh video list with updated traverse setting
+      await videoStore.fetchVideos()
+    }
+    loading.value = false
+  }
+}
+
+async function onIncludeVideosToggle(value: boolean) {
+  includeVideos.value = value
+  // Apply the change immediately if we have a directory set
+  if (currentDir.value) {
+    loading.value = true
+    const result = await api.setDirectory(currentDir.value, traverseSubfolders.value, value, includeImages.value)
+    if (result) {
+      includeVideos.value = result.include_videos ?? true
+      // Refresh video list with updated setting
+      await videoStore.fetchVideos()
+    }
+    loading.value = false
+  }
+}
+
+async function onIncludeImagesToggle(value: boolean) {
+  includeImages.value = value
+  // Apply the change immediately if we have a directory set
+  if (currentDir.value) {
+    loading.value = true
+    const result = await api.setDirectory(currentDir.value, traverseSubfolders.value, includeVideos.value, value)
+    if (result) {
+      includeImages.value = result.include_images ?? false
+      // Refresh video list with updated setting
       await videoStore.fetchVideos()
     }
     loading.value = false
@@ -160,9 +198,28 @@ onMounted(() => {
       <BaseToggle
         :model-value="traverseSubfolders"
         label="Include Subfolders"
-        description="Search for videos in subdirectories recursively"
+        description="Search for media in subdirectories recursively"
         :disabled="loading"
         @update:model-value="onTraverseToggle"
+      />
+    </div>
+
+    <!-- Media Type Toggles -->
+    <div class="pt-2 space-y-3">
+      <p class="text-sm font-medium text-dark-300">Media Types</p>
+      <BaseToggle
+        :model-value="includeVideos"
+        label="Include Videos"
+        description="Include video files in the media list"
+        :disabled="loading"
+        @update:model-value="onIncludeVideosToggle"
+      />
+      <BaseToggle
+        :model-value="includeImages"
+        label="Include Images"
+        description="Include image files in the media list"
+        :disabled="loading"
+        @update:model-value="onIncludeImagesToggle"
       />
     </div>
 

@@ -588,10 +588,43 @@ emit('view-caption', videoName: string)
 **Purpose:** Tabbed settings interface.
 
 **Tabs:**
-1. **Directory** - Working folder selection
+1. **Directory** - Working folder selection and media type filters
 2. **Model** - Model selection and loading
 3. **Inference** - Max frames, tokens, temperature
 4. **Prompt** - Custom captioning prompt
+
+---
+
+### DirectorySettings.vue
+
+**Purpose:** Working directory selection and media type filtering.
+
+**File:** `frontend/src/components/settings/DirectorySettings.vue`
+
+**Features:**
+- Text input for directory path (paste or type)
+- Browse button to open directory picker modal
+- Include Subfolders toggle for recursive search
+- **Media Type Toggles:**
+  - Include Videos - Filter video files (default: ON)
+  - Include Images - Filter image files (default: OFF)
+
+**State:**
+```typescript
+const currentDir = ref<string>('')
+const traverseSubfolders = ref<boolean>(false)
+const includeVideos = ref<boolean>(true)
+const includeImages = ref<boolean>(false)
+```
+
+**API Integration:**
+- `GET /api/directory` - Load current settings
+- `POST /api/directory` - Update directory and media type filters
+- `GET /api/directory/browse` - Browse subdirectories
+
+**Supported Extensions:**
+- Videos: `.mp4`, `.avi`, `.mov`, `.mkv`, `.webm`, `.flv`, `.wmv`
+- Images: `.jpg`, `.jpeg`, `.png`, `.gif`, `.webp`, `.bmp`
 
 ---
 

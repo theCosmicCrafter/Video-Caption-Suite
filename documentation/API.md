@@ -146,15 +146,28 @@ Get GPU information and system capabilities.
 
 ### GET /api/directory
 
-Get current working directory and subfolder setting.
+Get current working directory, subfolder setting, and media type filters.
 
 **Response:**
 ```json
 {
   "directory": "C:/Videos/MyProject",
-  "traverse_subfolders": true
+  "video_count": 42,
+  "image_count": 15,
+  "traverse_subfolders": true,
+  "include_videos": true,
+  "include_images": false
 }
 ```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `directory` | string | Current working directory path |
+| `video_count` | number | Number of video files found |
+| `image_count` | number | Number of image files found |
+| `traverse_subfolders` | boolean | Whether to search subdirectories |
+| `include_videos` | boolean | Whether to include video files |
+| `include_images` | boolean | Whether to include image files |
 
 **File Reference:** `backend/api.py:280-295`
 
@@ -162,21 +175,34 @@ Get current working directory and subfolder setting.
 
 ### POST /api/directory
 
-Set working directory.
+Set working directory and media type filters.
 
 **Request Body:**
 ```json
 {
   "directory": "C:/Videos/NewProject",
-  "traverse_subfolders": false
+  "traverse_subfolders": false,
+  "include_videos": true,
+  "include_images": true
 }
 ```
+
+| Field | Type | Required | Default | Description |
+|-------|------|----------|---------|-------------|
+| `directory` | string | Yes | - | Directory path to set |
+| `traverse_subfolders` | boolean | No | `false` | Search subdirectories |
+| `include_videos` | boolean | No | `true` | Include video files |
+| `include_images` | boolean | No | `false` | Include image files |
 
 **Response:**
 ```json
 {
   "directory": "C:/Videos/NewProject",
-  "traverse_subfolders": false
+  "video_count": 30,
+  "image_count": 25,
+  "traverse_subfolders": false,
+  "include_videos": true,
+  "include_images": true
 }
 ```
 
@@ -318,11 +344,11 @@ Delete a prompt.
 
 ---
 
-## Video Endpoints
+## Media Endpoints
 
 ### GET /api/videos
 
-List all videos in the working directory.
+List all media files (videos and images) in the working directory.
 
 **Response:**
 ```json
@@ -331,13 +357,28 @@ List all videos in the working directory.
     {
       "name": "video1.mp4",
       "path": "C:/Videos/video1.mp4",
-      "size_bytes": 104857600,
       "size_mb": 100.0,
-      "duration_seconds": 120.5,
+      "media_type": "video",
+      "duration_sec": 120.5,
       "width": 1920,
       "height": 1080,
+      "frame_count": 3615,
       "fps": 30.0,
-      "has_caption": true
+      "has_caption": true,
+      "caption_preview": "A person walking..."
+    },
+    {
+      "name": "image1.jpg",
+      "path": "C:/Videos/image1.jpg",
+      "size_mb": 2.5,
+      "media_type": "image",
+      "duration_sec": null,
+      "width": 1920,
+      "height": 1080,
+      "frame_count": 1,
+      "fps": null,
+      "has_caption": false,
+      "caption_preview": null
     }
   ],
   "total": 150,
@@ -345,21 +386,30 @@ List all videos in the working directory.
 }
 ```
 
+| Field | Type | Description |
+|-------|------|-------------|
+| `media_type` | string | Either `"video"` or `"image"` |
+| `duration_sec` | number/null | Duration in seconds (videos only) |
+| `frame_count` | number/null | Frame count (1 for images) |
+| `fps` | number/null | Frames per second (videos only) |
+
+**Note:** Which media types are returned depends on the `include_videos` and `include_images` settings (see Directory endpoints).
+
 **File Reference:** `backend/api.py:400-450`
 
 ---
 
 ### GET /api/videos/stream
 
-Stream video list via Server-Sent Events (SSE). Preferred for large libraries.
+Stream media list via Server-Sent Events (SSE). Preferred for large libraries.
 
 **Response:** SSE stream with events:
 ```
 event: video
-data: {"name": "video1.mp4", "size_bytes": 104857600, ...}
+data: {"name": "video1.mp4", "media_type": "video", "size_mb": 100.0, ...}
 
 event: video
-data: {"name": "video2.mp4", "size_bytes": 52428800, ...}
+data: {"name": "image1.jpg", "media_type": "image", "size_mb": 2.5, ...}
 
 event: complete
 data: {"total": 150}
