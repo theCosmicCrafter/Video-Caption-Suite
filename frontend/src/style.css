@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Override Tailwind Preflight default border-color (#e5e7eb) to transparent.
+   Borders only appear when a component explicitly sets a color class. */
+*, *::before, *::after {
+  border-color: transparent;
+}
+
 @layer base {
   body {
     @apply bg-dark-900 text-dark-100 min-h-screen;
@@ -36,9 +42,9 @@
   }
 
   .input {
-    @apply w-full px-3 py-2 rounded-lg bg-dark-800 border border-dark-600
+    @apply w-full px-3 py-2 rounded-lg bg-dark-800
            text-dark-100 placeholder-dark-400
-           focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent
+           focus:outline-none focus:ring-2 focus:ring-primary-500
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
@@ -47,11 +53,11 @@
   }
 
   .card {
-    @apply bg-dark-800 rounded-xl border border-dark-700 overflow-hidden;
+    @apply bg-dark-800 rounded-xl overflow-hidden;
   }
 
   .card-header {
-    @apply px-4 py-3 border-b border-dark-700 bg-dark-800/50;
+    @apply px-4 py-3 bg-dark-800/50;
   }
 
   .card-body {

@@ -154,7 +154,7 @@ function utilizationTextColor(percent: number): string {
     >
       <div
         v-if="expanded"
-        class="absolute top-full right-0 mt-2 w-80 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50 p-4"
+        class="absolute top-full right-0 mt-2 w-80 bg-dark-800 rounded-lg shadow-xl z-50 p-4"
       >
         <h3 class="text-sm font-medium text-dark-200 mb-3">System Resources</h3>
 
@@ -190,7 +190,7 @@ function utilizationTextColor(percent: number): string {
 
         <!-- GPUs -->
         <template v-if="snapshot.gpus.length > 0">
-          <div class="border-t border-dark-700 pt-3 mt-3">
+          <div class="pt-3 mt-3">
             <div
               v-for="gpu in snapshot.gpus"
               :key="gpu.index"

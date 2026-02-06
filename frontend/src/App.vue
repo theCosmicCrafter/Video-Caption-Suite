@@ -145,7 +145,7 @@ onUnmounted(() => {
 <template>
   <div class="app-container h-screen flex flex-col bg-dark-900 text-dark-100 overflow-hidden">
     <!-- Top bar -->
-    <header class="flex-shrink-0 h-14 bg-dark-850 border-b border-dark-700 px-4 flex items-center justify-between">
+    <header class="flex-shrink-0 h-14 bg-dark-850 px-4 flex items-center justify-between">
       <!-- Left: Logo & Title + Main Tabs -->
       <div class="flex items-center gap-6">
         <div class="flex items-center gap-3">
@@ -331,7 +331,7 @@ onUnmounted(() => {
         <Transition name="slide-right">
           <aside
             v-if="showCaptionPanel"
-            class="flex-shrink-0 overflow-hidden relative border-l border-dark-700"
+            class="flex-shrink-0 overflow-hidden relative"
             :style="{ width: `${captionPanelWidth}px` }"
           >
             <!-- Resize handle on left side -->
@@ -369,7 +369,7 @@ onUnmounted(() => {
     </div>
 
     <!-- Bottom action bar -->
-    <footer class="flex-shrink-0 h-14 bg-dark-850 border-t border-dark-700 px-4 flex items-center justify-between">
+    <footer class="flex-shrink-0 h-14 bg-dark-850 px-4 flex items-center justify-between">
       <!-- Left: Model controls -->
       <div class="flex items-center gap-2">
         <div
@@ -474,20 +474,20 @@ onUnmounted(() => {
   appearance: none;
   width: 12px;
   height: 12px;
-  background: #0ea5e9;
+  background: #5c7cfa;
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.15s;
 }
 
 .slider-thumb::-webkit-slider-thumb:hover {
-  background: #38bdf8;
+  background: #748ffc;
 }
 
 .slider-thumb::-moz-range-thumb {
   width: 12px;
   height: 12px;
-  background: #0ea5e9;
+  background: #5c7cfa;
   border-radius: 50%;
   cursor: pointer;
   border: none;

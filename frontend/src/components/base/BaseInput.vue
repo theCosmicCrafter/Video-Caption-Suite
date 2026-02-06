@@ -43,7 +43,7 @@ function handleInput(event: Event) {
       :step="step"
       :class="[
         'input',
-        error && 'border-red-500 focus:ring-red-500',
+        error && 'focus:ring-red-500',
       ]"
       @input="handleInput"
     />

@@ -139,10 +139,9 @@ onUnmounted(() => {
   <div
     :class="[
       'video-tile group relative h-full rounded-lg overflow-hidden cursor-pointer transition-all duration-150 flex flex-col',
-      'border-2',
       selected
-        ? 'border-primary-500 ring-2 ring-primary-500/30'
-        : 'border-dark-700 hover:border-dark-500',
+        ? 'ring-2 ring-primary-500/30'
+        : '',
       processing && 'ring-2 ring-primary-400/50 animate-pulse',
     ]"
     @mouseenter="handleMouseEnter"
@@ -244,11 +243,11 @@ onUnmounted(() => {
       >
         <div
           :class="[
-            'w-5 h-5 rounded border-2 flex items-center justify-center transition-all',
+            'w-5 h-5 rounded flex items-center justify-center transition-all',
             'shadow-sm',
             selected
-              ? 'bg-primary-500 border-primary-500'
-              : 'bg-dark-900/80 border-dark-400 hover:border-dark-200',
+              ? 'bg-primary-500'
+              : 'bg-dark-900/80',
           ]"
         >
           <svg

@@ -43,7 +43,7 @@ function handleInput(event: Event) {
       :class="[
         'input',
         resizable ? 'resize-y' : 'resize-none',
-        error && 'border-red-500 focus:ring-red-500',
+        error && 'focus:ring-red-500',
       ]"
       :style="{
         minHeight: `${minRows * 1.5 + 1}rem`,

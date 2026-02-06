@@ -7,7 +7,7 @@ const { wsConnected, state } = storeToRefs(progressStore)
 </script>
 
 <template>
-  <header class="bg-dark-800 border-b border-dark-700">
+  <header class="bg-dark-800">
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between h-16">
         <!-- Logo and title -->

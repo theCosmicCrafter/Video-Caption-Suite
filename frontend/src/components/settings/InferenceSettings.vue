@@ -85,7 +85,7 @@ function formatBatchSize(value: number): string {
     />
 
     <!-- Optimization Settings -->
-    <div class="border-t border-dark-700 pt-4 space-y-4">
+    <div class="pt-4 space-y-4">
       <h4 class="text-xs font-medium text-dark-400 uppercase tracking-wider">Optimization</h4>
 
       <!-- Multi-GPU Batch Size (only shown when gpu_count > 1) -->

@@ -33,7 +33,7 @@ function handleInput(e: Event) {
       <textarea
         :value="settings.prompt"
         placeholder="Enter the prompt for video captioning..."
-        class="flex-1 min-h-0 w-full px-3 py-2 bg-dark-800 border border-dark-600 rounded-lg text-dark-100 placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+        class="flex-1 min-h-0 w-full px-3 py-2 bg-dark-800 rounded-lg text-dark-100 placeholder-dark-400 focus:outline-none focus:ring-2 focus:ring-primary-500 resize-none"
         @input="handleInput"
       />
       <p class="flex-shrink-0 text-xs text-dark-500 mt-2">

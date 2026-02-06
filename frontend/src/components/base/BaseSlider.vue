@@ -68,7 +68,7 @@ function handleInput(event: Event) {
                [&::-webkit-slider-thumb]:transition-all
                [&::-webkit-slider-thumb]:hover:bg-primary-400
                [&::-webkit-slider-thumb]:hover:scale-110"
-        :style="{ background: `linear-gradient(to right, rgb(14 165 233) ${percentage}%, rgb(51 65 85) ${percentage}%)` }"
+        :style="{ background: `linear-gradient(to right, rgb(92 124 250) ${percentage}%, rgb(52 58 64) ${percentage}%)` }"
         @input="handleInput"
       />
     </div>

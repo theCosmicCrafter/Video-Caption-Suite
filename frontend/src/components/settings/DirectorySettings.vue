@@ -167,7 +167,7 @@ onMounted(() => {
       <input
         v-model="inputDir"
         placeholder="Paste or type a directory path..."
-        class="w-full px-3 py-2 bg-dark-700 border border-dark-600 rounded-lg text-dark-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+        class="w-full px-3 py-2 bg-dark-700 rounded-lg text-dark-200 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-primary-500"
         @keydown.enter="loadFromInput"
       />
       <!-- Buttons below input -->
@@ -230,9 +230,9 @@ onMounted(() => {
         class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
         @click.self="closeBrowser"
       >
-        <div class="bg-dark-800 rounded-lg shadow-xl w-[600px] max-h-[70vh] flex flex-col border border-dark-700">
+        <div class="bg-dark-800 rounded-lg shadow-xl w-[600px] max-h-[70vh] flex flex-col">
           <!-- Header -->
-          <div class="p-4 border-b border-dark-700">
+          <div class="p-4">
             <h3 class="font-medium text-dark-100">Select Directory</h3>
             <p class="text-sm text-dark-400 truncate font-mono mt-1">{{ browseDir }}</p>
           </div>
@@ -303,7 +303,7 @@ onMounted(() => {
           </div>
 
           <!-- Footer -->
-          <div class="p-4 border-t border-dark-700 flex justify-between items-center">
+          <div class="p-4 flex justify-between items-center">
             <p class="text-sm text-dark-500">
               {{ directories.length }} folder{{ directories.length !== 1 ? 's' : '' }}
             </p>

@@ -73,7 +73,7 @@ watch(() => props.visible, (visible) => {
         <!-- Modal -->
         <div class="relative w-full max-w-3xl max-h-[80vh] bg-dark-800 rounded-xl shadow-2xl flex flex-col">
           <!-- Header -->
-          <div class="flex items-center justify-between px-6 py-4 border-b border-dark-700">
+          <div class="flex items-center justify-between px-6 py-4">
             <div>
               <h3 class="text-lg font-semibold text-dark-100">Caption</h3>
               <p class="text-sm text-dark-400">{{ videoName }}</p>
@@ -99,7 +99,7 @@ watch(() => props.visible, (visible) => {
             </div>
 
             <!-- Error -->
-            <div v-else-if="error" class="p-4 bg-red-900/30 border border-red-800 rounded-lg text-red-400">
+            <div v-else-if="error" class="p-4 bg-red-900/30 rounded-lg text-red-400">
               {{ error }}
             </div>
 
@@ -110,7 +110,7 @@ watch(() => props.visible, (visible) => {
           </div>
 
           <!-- Footer -->
-          <div class="flex items-center justify-between px-6 py-4 border-t border-dark-700">
+          <div class="flex items-center justify-between px-6 py-4">
             <div class="text-xs text-dark-500">
               <span v-if="caption?.created_at">
                 Created: {{ new Date(caption.created_at).toLocaleString() }}

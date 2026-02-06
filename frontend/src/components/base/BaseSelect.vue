@@ -36,7 +36,7 @@ function handleChange(event: Event) {
       :disabled="disabled"
       :class="[
         'input appearance-none cursor-pointer',
-        error && 'border-red-500 focus:ring-red-500',
+        error && 'focus:ring-red-500',
       ]"
       @change="handleChange"
     >

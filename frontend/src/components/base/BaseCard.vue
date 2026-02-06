@@ -51,7 +51,7 @@ function toggleCollapse() {
     <div v-show="!collapsed" class="card-body flex-1 min-h-0 flex flex-col">
       <slot />
     </div>
-    <div v-if="$slots.footer" class="flex-shrink-0 px-4 py-3 border-t border-dark-700 bg-dark-800/30">
+    <div v-if="$slots.footer" class="flex-shrink-0 px-4 py-3 bg-dark-800/30">
       <slot name="footer" />
     </div>
   </div>

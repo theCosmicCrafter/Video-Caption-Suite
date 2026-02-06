@@ -70,7 +70,7 @@ watch(activeTab, () => {
 <template>
   <div class="flex flex-col h-full bg-dark-900">
     <!-- Header -->
-    <div class="px-4 py-3 border-b border-dark-700">
+    <div class="px-4 py-3">
       <h2 class="text-lg font-semibold text-dark-100">Caption Analytics</h2>
       <p class="text-xs text-dark-400 mt-0.5">
         Analyze word patterns across your caption dataset
@@ -78,12 +78,12 @@ watch(activeTab, () => {
     </div>
 
     <!-- Summary Stats -->
-    <div class="px-4 py-3 border-b border-dark-700">
+    <div class="px-4 py-3">
       <AnalyticsSummary :summary="store.summary" :loading="store.loading && !store.hasData" />
     </div>
 
     <!-- Tabs -->
-    <div class="px-4 pt-3 border-b border-dark-700">
+    <div class="px-4 pt-3">
       <div class="flex gap-1">
         <button
           v-for="tab in tabs"
@@ -91,7 +91,7 @@ watch(activeTab, () => {
           :class="[
             'px-4 py-2 text-sm font-medium rounded-t-lg transition-colors relative',
             activeTab === tab.key
-              ? 'bg-dark-800 text-primary-400 border-t border-l border-r border-dark-600'
+              ? 'bg-dark-800 text-primary-400'
               : 'text-dark-400 hover:text-dark-200 hover:bg-dark-800/50'
           ]"
           @click="activeTab = tab.key"
@@ -107,7 +107,7 @@ watch(activeTab, () => {
     </div>
 
     <!-- Controls -->
-    <div class="px-4 py-3 border-b border-dark-700">
+    <div class="px-4 py-3">
       <AnalyticsControls
         :stopword-preset="store.settings.stopwordPreset"
         :min-word-length="store.settings.minWordLength"
@@ -128,7 +128,7 @@ watch(activeTab, () => {
     <!-- Error Display -->
     <div
       v-if="store.error"
-      class="mx-4 mt-3 px-3 py-2 bg-red-500/10 border border-red-500/30 rounded text-red-400 text-sm"
+      class="mx-4 mt-3 px-3 py-2 bg-red-500/10 rounded text-red-400 text-sm"
     >
       {{ store.error }}
     </div>
@@ -239,7 +239,7 @@ watch(activeTab, () => {
     <!-- Footer Stats -->
     <div
       v-if="store.hasData"
-      class="px-4 py-2 border-t border-dark-700 text-xs text-dark-500 flex items-center justify-between"
+      class="px-4 py-2 text-xs text-dark-500 flex items-center justify-between"
     >
       <span>
         {{ store.captionsAnalyzed.toLocaleString() }} captions analyzed

@@ -86,7 +86,7 @@ function pmiToColor(pmi: number): string {
         :class="[
           'px-3 py-1.5 text-xs rounded-lg transition-colors',
           viewType === type.key
-            ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
+            ? 'bg-primary-500/20 text-primary-400'
             : 'bg-dark-700 text-dark-400 hover:text-dark-200'
         ]"
         @click="viewType = type.key as ViewType"

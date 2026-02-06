@@ -70,15 +70,15 @@ onMounted(() => {
     </template>
 
     <!-- Tabs -->
-    <div class="flex flex-wrap border-b border-dark-700 mb-4 -mx-4 px-2">
+    <div class="flex flex-wrap mb-4 -mx-4 px-2">
       <button
         v-for="tab in tabs"
         :key="tab.key"
         :class="[
-          'flex-1 min-w-0 px-2 py-2 text-xs sm:text-sm font-medium border-b-2 transition-colors truncate',
+          'flex-1 min-w-0 px-2 py-2 text-xs sm:text-sm font-medium transition-colors truncate',
           activeTab === tab.key
-            ? 'border-primary-500 text-primary-400'
-            : 'border-transparent text-dark-400 hover:text-dark-200',
+            ? 'text-primary-400'
+            : 'text-dark-400 hover:text-dark-200',
         ]"
         @click="activeTab = tab.key"
       >
@@ -89,7 +89,7 @@ onMounted(() => {
     <!-- Error message -->
     <div
       v-if="error"
-      class="mb-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-sm text-red-400"
+      class="mb-4 p-3 bg-red-900/30 rounded-lg text-sm text-red-400"
     >
       {{ error }}
     </div>

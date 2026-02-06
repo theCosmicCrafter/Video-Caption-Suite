@@ -67,9 +67,9 @@ watch(() => props.video?.name, () => {
 </script>
 
 <template>
-  <div class="caption-panel h-full flex flex-col bg-dark-850 border-l border-dark-700">
+  <div class="caption-panel h-full flex flex-col bg-dark-850">
     <!-- Header -->
-    <div class="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-dark-700">
+    <div class="flex-shrink-0 flex items-center justify-between px-4 py-3">
       <div class="min-w-0 flex-1">
         <h3 class="text-sm font-semibold text-dark-200 truncate">Caption</h3>
         <p v-if="video" class="text-xs text-dark-500 truncate mt-0.5" :title="video.name">
@@ -120,7 +120,7 @@ watch(() => props.video?.name, () => {
       </div>
 
       <!-- Error -->
-      <div v-else-if="error" class="p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-400 text-sm">
+      <div v-else-if="error" class="p-3 bg-red-900/30 rounded-lg text-red-400 text-sm">
         {{ error }}
       </div>
 
@@ -131,7 +131,7 @@ watch(() => props.video?.name, () => {
     </div>
 
     <!-- Footer actions -->
-    <div v-if="video && hasCaption && caption" class="flex-shrink-0 px-4 py-3 border-t border-dark-700">
+    <div v-if="video && hasCaption && caption" class="flex-shrink-0 px-4 py-3">
       <div class="flex items-center gap-2">
         <BaseButton
           variant="secondary"

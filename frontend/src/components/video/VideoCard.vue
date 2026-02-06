@@ -42,10 +42,10 @@ const formattedDuration = computed(() => {
 <template>
   <div
     :class="[
-      'group relative p-3 rounded-lg border transition-all cursor-pointer',
+      'group relative p-3 rounded-lg transition-all cursor-pointer',
       selected
-        ? 'bg-primary-900/30 border-primary-500'
-        : 'bg-dark-800 border-dark-700 hover:border-dark-500',
+        ? 'bg-primary-900/30'
+        : 'bg-dark-800',
       processing && 'animate-pulse',
     ]"
     @click="emit('select')"
@@ -59,10 +59,10 @@ const formattedDuration = computed(() => {
     >
       <div
         :class="[
-          'w-5 h-5 rounded border-2 flex items-center justify-center transition-colors',
+          'w-5 h-5 rounded flex items-center justify-center transition-colors',
           selected
-            ? 'bg-primary-500 border-primary-500'
-            : 'border-dark-500 hover:border-dark-300',
+            ? 'bg-primary-500'
+            : '',
         ]"
       >
         <svg
@@ -138,7 +138,7 @@ const formattedDuration = computed(() => {
     <!-- Caption preview -->
     <div
       v-if="video.has_caption && video.caption_preview"
-      class="mt-2 pt-2 border-t border-dark-700"
+      class="mt-2 pt-2"
     >
       <p class="text-xs text-dark-400 line-clamp-2">
         {{ video.caption_preview }}

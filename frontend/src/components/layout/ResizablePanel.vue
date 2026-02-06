@@ -28,7 +28,7 @@ defineExpose({ width })
   <aside
     class="flex-shrink-0 relative flex flex-col"
     :class="[
-      side === 'left' ? 'border-r border-dark-700' : 'border-l border-dark-700',
+      '',
     ]"
     :style="{ width: `${width}px` }"
   >

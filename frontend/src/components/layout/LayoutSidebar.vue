@@ -30,7 +30,7 @@ withDefaults(defineProps<Props>(), {
     </div>
 
     <!-- Fixed StatusPanel at bottom -->
-    <div class="flex-shrink-0 border-t border-dark-700 p-4 bg-dark-850">
+    <div class="flex-shrink-0 p-4 bg-dark-850">
       <StatusPanel />
     </div>
   </ResizablePanel>

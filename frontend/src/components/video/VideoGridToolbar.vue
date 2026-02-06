@@ -53,7 +53,7 @@ function handleColumnChange(e: Event) {
 </script>
 
 <template>
-  <div class="flex-shrink-0 h-12 bg-dark-850 border-b border-dark-700 px-4 flex items-center justify-between">
+  <div class="flex-shrink-0 h-12 bg-dark-850 px-4 flex items-center justify-between">
     <!-- Left: Video stats & selection controls -->
     <div class="flex items-center gap-4">
       <div class="flex items-center gap-2 text-xs">

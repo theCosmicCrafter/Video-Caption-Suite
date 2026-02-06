@@ -45,14 +45,14 @@ const showNgramSize = computed(() => props.activeTab === 'ngrams')
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-3 p-3 bg-dark-800/30 rounded-lg border border-dark-700">
+  <div class="flex flex-wrap items-center gap-3 p-3 bg-dark-800/30 rounded-lg">
     <!-- Stopword Preset -->
     <div class="flex items-center gap-2">
       <label class="text-xs text-dark-400">Stopwords:</label>
       <select
         :value="stopwordPreset"
         :disabled="loading"
-        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 border border-dark-600 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 focus:outline-none disabled:opacity-50"
         @change="emit('update:stopwordPreset', ($event.target as HTMLSelectElement).value as StopwordPreset)"
       >
         <option v-for="opt in stopwordOptions" :key="opt.value" :value="opt.value">
@@ -70,7 +70,7 @@ const showNgramSize = computed(() => props.activeTab === 'ngrams')
         :disabled="loading"
         min="1"
         max="10"
-        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 w-14 border border-dark-600 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 w-14 focus:outline-none disabled:opacity-50"
         @input="emit('update:minWordLength', parseInt(($event.target as HTMLInputElement).value) || 2)"
       />
     </div>
@@ -85,7 +85,7 @@ const showNgramSize = computed(() => props.activeTab === 'ngrams')
         min="10"
         max="200"
         step="10"
-        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 w-16 border border-dark-600 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 w-16 focus:outline-none disabled:opacity-50"
         @input="emit('update:topN', parseInt(($event.target as HTMLInputElement).value) || 50)"
       />
     </div>
@@ -96,7 +96,7 @@ const showNgramSize = computed(() => props.activeTab === 'ngrams')
       <select
         :value="ngramSize"
         :disabled="loading"
-        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 border border-dark-600 focus:border-primary-500 focus:outline-none disabled:opacity-50"
+        class="bg-dark-700 text-dark-200 text-xs rounded px-2 py-1 focus:outline-none disabled:opacity-50"
         @change="emit('update:ngramSize', parseInt(($event.target as HTMLSelectElement).value))"
       >
         <option v-for="opt in ngramOptions" :key="opt.value" :value="opt.value">
@@ -114,8 +114,8 @@ const showNgramSize = computed(() => props.activeTab === 'ngrams')
         :class="[
           'px-2 py-1 text-xs rounded transition-colors',
           visualizationType === opt.value
-            ? 'bg-primary-500/20 text-primary-400 border border-primary-500/30'
-            : 'bg-dark-700 text-dark-400 hover:text-dark-200 border border-transparent'
+            ? 'bg-primary-500/20 text-primary-400'
+            : 'bg-dark-700 text-dark-400 hover:text-dark-200'
         ]"
         @click="emit('update:visualizationType', opt.value)"
       >

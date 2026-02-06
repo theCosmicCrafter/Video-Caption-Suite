@@ -127,7 +127,7 @@ onUnmounted(() => {
     <div class="flex gap-2">
       <!-- Dropdown button -->
       <button
-        class="flex items-center gap-2 px-3 py-1.5 text-sm bg-dark-700 hover:bg-dark-600 border border-dark-600 rounded transition-colors"
+        class="flex items-center gap-2 px-3 py-1.5 text-sm bg-dark-700 hover:bg-dark-600 rounded transition-colors"
         @click.stop="toggleDropdown"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,7 +152,7 @@ onUnmounted(() => {
 
       <!-- Save current button -->
       <button
-        class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-dark-700 hover:bg-dark-600 border border-dark-600 rounded transition-colors"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-sm bg-dark-700 hover:bg-dark-600 rounded transition-colors"
         title="Save current prompt to library"
         @click.stop="toggleSaveDialog"
       >
@@ -173,7 +173,7 @@ onUnmounted(() => {
       <!-- Dropdown menu -->
       <div
         v-if="isOpen"
-        class="prompt-library-dropdown fixed w-72 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-[9999] overflow-hidden"
+        class="prompt-library-dropdown fixed w-72 bg-dark-800 rounded-lg shadow-xl z-[9999] overflow-hidden"
         :style="{ top: `${dropdownPosition.top}px`, left: `${dropdownPosition.left}px` }"
         @click.stop
       >
@@ -233,7 +233,7 @@ onUnmounted(() => {
       <!-- Save dialog -->
       <div
         v-if="showSaveDialog"
-        class="prompt-library-dropdown fixed w-72 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-[9999] p-3"
+        class="prompt-library-dropdown fixed w-72 bg-dark-800 rounded-lg shadow-xl z-[9999] p-3"
         :style="{ top: `${dropdownPosition.top}px`, left: `${dropdownPosition.left}px` }"
         @click.stop
       >
@@ -243,7 +243,7 @@ onUnmounted(() => {
             v-model="newPromptName"
             type="text"
             placeholder="Prompt name..."
-            class="flex-1 px-2 py-1.5 text-sm bg-dark-700 border border-dark-600 rounded text-dark-200 placeholder-dark-500 focus:outline-none focus:border-primary-500"
+            class="flex-1 px-2 py-1.5 text-sm bg-dark-700 rounded text-dark-200 placeholder-dark-500 focus:outline-none"
             @keyup.enter="handleSavePrompt"
           />
           <BaseButton
