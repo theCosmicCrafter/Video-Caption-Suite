@@ -315,6 +315,31 @@ class CorrelationResponse(BaseModel):
     captions_analyzed: int
 
 
+# ============================================================================
+# Resource Monitoring Schemas
+# ============================================================================
+
+class GPUResourceMetrics(BaseModel):
+    """Metrics for a single GPU"""
+    index: int
+    name: str
+    utilization_percent: float = 0.0
+    vram_used_gb: float = 0.0
+    vram_total_gb: float = 0.0
+    temperature_c: int = 0
+    power_draw_w: float = 0.0
+    power_limit_w: float = 0.0
+
+
+class ResourceUpdate(BaseModel):
+    """System resource snapshot sent via WebSocket"""
+    cpu_percent: float = 0.0
+    ram_used_gb: float = 0.0
+    ram_total_gb: float = 0.0
+    gpus: List[GPUResourceMetrics] = []
+    timestamp: float = 0.0
+
+
 class AnalyticsSummary(BaseModel):
     """Quick summary statistics"""
     total_captions: int

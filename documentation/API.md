@@ -3,7 +3,7 @@
 Complete reference for the Video Caption Suite REST and WebSocket APIs.
 
 **Base URL:** `http://localhost:8000`
-**WebSocket:** `ws://localhost:8000/ws/progress`
+**WebSocket:** `ws://localhost:8000/ws/progress` | `ws://localhost:8000/ws/resources`
 
 ## Table of Contents
 
@@ -912,6 +912,80 @@ The frontend automatically reconnects with exponential backoff:
 - Max attempts: 5
 
 **File Reference:** `frontend/src/composables/useWebSocket.ts`
+
+---
+
+### Resource Monitoring WebSocket
+
+#### Connection
+
+```javascript
+const ws = new WebSocket('ws://localhost:8000/ws/resources');
+```
+
+A dedicated WebSocket endpoint for real-time system resource monitoring. Operates independently from the progress WebSocket, so resource metrics are available regardless of whether processing is active.
+
+#### Messages Received
+
+The server sends a `ResourceUpdate` snapshot every **2 seconds**:
+
+```json
+{
+  "cpu_percent": 45.2,
+  "ram_used_gb": 12.4,
+  "ram_total_gb": 32.0,
+  "gpus": [
+    {
+      "index": 0,
+      "name": "NVIDIA GeForce RTX 4090",
+      "utilization_percent": 78.0,
+      "vram_used_gb": 16.2,
+      "vram_total_gb": 24.0,
+      "temperature_c": 72,
+      "power_draw_w": 320.5,
+      "power_limit_w": 450.0
+    },
+    {
+      "index": 1,
+      "name": "NVIDIA GeForce RTX 4090",
+      "utilization_percent": 65.0,
+      "vram_used_gb": 15.8,
+      "vram_total_gb": 24.0,
+      "temperature_c": 68,
+      "power_draw_w": 290.0,
+      "power_limit_w": 450.0
+    }
+  ],
+  "timestamp": "2025-01-20T14:30:00.123Z"
+}
+```
+
+**Payload Fields:**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `cpu_percent` | number | System-wide CPU utilization (0-100) |
+| `ram_used_gb` | number | RAM currently in use (GB) |
+| `ram_total_gb` | number | Total system RAM (GB) |
+| `gpus` | array | Per-GPU metrics (see below) |
+| `timestamp` | string | ISO 8601 timestamp of the snapshot |
+
+**Per-GPU Fields (`GPUResourceMetrics`):**
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `index` | number | GPU device index |
+| `name` | string | GPU model name |
+| `utilization_percent` | number | GPU core utilization (0-100) |
+| `vram_used_gb` | number | VRAM currently in use (GB) |
+| `vram_total_gb` | number | Total VRAM (GB) |
+| `temperature_c` | number | GPU temperature in Celsius |
+| `power_draw_w` | number | Current power draw (Watts) |
+| `power_limit_w` | number | Power limit (Watts) |
+
+**Backend Implementation:** Uses `psutil` for CPU/RAM metrics and `pynvml` (NVML) for GPU metrics. The `ResourceMonitor` class in `backend/resource_monitor.py` collects all metrics per snapshot.
+
+**File Reference:** `backend/api.py`, `backend/resource_monitor.py`, `backend/schemas.py`
 
 ---
 

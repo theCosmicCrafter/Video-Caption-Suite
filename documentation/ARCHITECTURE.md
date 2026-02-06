@@ -24,6 +24,7 @@ This document describes the system architecture, data flow, and component relati
 │  │                         api.py (FastAPI Server)                         ││
 │  │  - REST endpoints (settings, videos, captions, processing)              ││
 │  │  - WebSocket endpoint (/ws/progress)                                    ││
+│  │  - WebSocket endpoint (/ws/resources) — real-time resource monitoring   ││
 │  │  - SSE streaming for video lists                                        ││
 │  └─────────────────────────────────────────────────────────────────────────┘│
 │                                    │                                         │
@@ -77,10 +78,15 @@ Browser loads App.vue
         │                       └──► Streams video info progressively
         │                           (handles large libraries efficiently)
         │
-        └──► useWebSocket.connect()
+        ├──► useWebSocket.connect()
+        │           │
+        │           └──► WS /ws/progress ──► Persistent connection
+        │                                   for real-time updates
+        │
+        └──► useResourceWebSocket.connect()
                     │
-                    └──► WS /ws/progress ──► Persistent connection
-                                            for real-time updates
+                    └──► WS /ws/resources ──► Resource snapshots
+                                             every 2 seconds
 ```
 
 ### 2. Video Processing Flow
@@ -180,8 +186,13 @@ Combined in progressStore for UI display
 api.py
   ├── schemas.py (Pydantic models)
   ├── processing.py (ProcessingManager)
+  ├── resource_monitor.py (ResourceMonitor)
   ├── gpu_utils.py (GPU detection)
   └── config.py (settings)
+
+resource_monitor.py
+  ├── psutil (CPU and RAM metrics)
+  └── pynvml / nvidia-ml-py3 (GPU metrics via NVML)
 
 processing.py
   ├── model_loader.py (load_model, generate_caption, clear_cache)
@@ -222,6 +233,9 @@ App.vue
 ├── CaptionPanel (right sidebar)
 │   └── CaptionViewer
 │
+├── ResourceMonitor (header)
+│   └── Click-to-expand popover (per-GPU details)
+│
 └── StatusPanel / ProgressBar (header)
     ├── StageProgress
     ├── TokenCounter
@@ -240,12 +254,16 @@ App.vue
   │     ├── stage, progress, workers
   │     └── updateFromWebSocket()
   │
-  └── useSettingsStore()
-        ├── settings, gpuInfo
-        └── fetchSettings(), updateSettings()
+  ├── useSettingsStore()
+  │     ├── settings, gpuInfo
+  │     └── fetchSettings(), updateSettings()
+  │
+  └── useResourceStore()
+        └── snapshot (CPU, RAM, GPU metrics)
 
 Composables:
   useWebSocket() ──► progressStore.updateFromWebSocket()
+  useResourceWebSocket() ──► resourceStore.updateFromSnapshot()
   useApi() ──► HTTP requests to backend
 ```
 
@@ -271,7 +289,13 @@ Composables:
 - Dynamic work distribution (no pre-assignment)
 - Sequential model loading to avoid OOM
 
-### 5. Memory Management
+### 5. Dedicated Resource Monitoring WebSocket
+- Separate `/ws/resources` endpoint from `/ws/progress` to decouple resource metrics from processing state
+- Uses `psutil` for CPU/RAM and `pynvml` (NVML) for per-GPU metrics (utilization, VRAM, temperature, power)
+- Pushes snapshots every 2 seconds for near-real-time visibility
+- Dependencies: `psutil>=5.9.0`, `nvidia-ml-py3>=7.352.0`
+
+### 6. Memory Management
 - Explicit `del` on model objects before `gc.collect()`
 - CUDA synchronization before `empty_cache()`
 - Clear all references before cache cleanup
@@ -281,7 +305,9 @@ Composables:
 | Component | File | Key Lines |
 |-----------|------|-----------|
 | FastAPI app creation | `backend/api.py` | 1-50 |
-| WebSocket handler | `backend/api.py` | 120-180 |
+| WebSocket handler (progress) | `backend/api.py` | 120-180 |
+| WebSocket handler (resources) | `backend/api.py` | See `/ws/resources` |
+| Resource monitor | `backend/resource_monitor.py` | Full file |
 | Video endpoints | `backend/api.py` | 400-600 |
 | Processing endpoints | `backend/api.py` | 800-900 |
 | ProcessingManager | `backend/processing.py` | 85-250 |

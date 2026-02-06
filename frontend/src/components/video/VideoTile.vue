@@ -88,10 +88,6 @@ function handleThumbnailLoad() {
   thumbnailLoaded.value = true
 }
 
-function handleClick(e: MouseEvent) {
-  emit('select')
-}
-
 function handleViewCaption(e: MouseEvent) {
   e.stopPropagation()
   emit('viewCaption')
@@ -149,7 +145,6 @@ onUnmounted(() => {
         : 'border-dark-700 hover:border-dark-500',
       processing && 'ring-2 ring-primary-400/50 animate-pulse',
     ]"
-    @click="handleClick"
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >

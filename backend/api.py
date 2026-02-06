@@ -1042,6 +1042,34 @@ async def websocket_progress(websocket: WebSocket):
 
 
 # ============================================================================
+# WebSocket for Resource Monitoring
+# ============================================================================
+
+from backend.resource_monitor import ResourceMonitor
+
+_resource_monitor = ResourceMonitor()
+
+
+@app.websocket("/ws/resources")
+async def websocket_resources(websocket: WebSocket):
+    """WebSocket endpoint for real-time system resource monitoring"""
+    await websocket.accept()
+    print("[API] Resource monitor WebSocket connected")
+
+    try:
+        while True:
+            snapshot = _resource_monitor.get_snapshot()
+            await websocket.send_json(snapshot)
+            await asyncio.sleep(2)
+    except WebSocketDisconnect:
+        pass
+    except Exception as e:
+        print(f"[API] Resource WebSocket error: {e}")
+    finally:
+        print("[API] Resource monitor WebSocket disconnected")
+
+
+# ============================================================================
 # Analytics Endpoints
 # ============================================================================
 

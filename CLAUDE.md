@@ -48,6 +48,7 @@ Before completing any task, verify:
 | Data Models | `backend/schemas.py` | Settings, Progress, Video/Caption, Analytics |
 | Processing | `backend/processing.py` | ProcessingManager, multi-GPU |
 | Analytics | `backend/analytics.py` | Word frequency, n-grams, correlations |
+| Resource Monitor | `backend/resource_monitor.py` | ResourceMonitor, CPU/RAM/GPU metrics |
 | Model Loading | `model_loader.py` | load_model, generate_caption, clear_cache |
 | Video Processing | `video_processor.py` | extract_frames, process_video |
 | Configuration | `config.py` | All defaults |
@@ -61,10 +62,13 @@ Before completing any task, verify:
 | Progress State | `frontend/src/stores/progressStore.ts` |
 | Settings State | `frontend/src/stores/settingsStore.ts` |
 | Analytics State | `frontend/src/stores/analyticsStore.ts` |
+| Resource State | `frontend/src/stores/resourceStore.ts` |
 | API Calls | `frontend/src/composables/useApi.ts` |
 | WebSocket | `frontend/src/composables/useWebSocket.ts` |
+| Resource WebSocket | `frontend/src/composables/useResourceWebSocket.ts` |
 | Types | `frontend/src/types/*.ts` |
 | Analytics Components | `frontend/src/components/analytics/*.vue` |
+| Resource Monitor | `frontend/src/components/layout/ResourceMonitor.vue` |
 
 ## Code Patterns
 
@@ -173,6 +177,8 @@ Backend and frontend types must stay synchronized:
 | `backend/schemas.py:WordFrequency*` | `frontend/src/types/analytics.ts:WordFrequency*` |
 | `backend/schemas.py:Ngram*` | `frontend/src/types/analytics.ts:Ngram*` |
 | `backend/schemas.py:Correlation*` | `frontend/src/types/analytics.ts:Correlation*` |
+| `backend/schemas.py:GPUResourceMetrics` | `frontend/src/types/resources.ts:GPUMetrics` |
+| `backend/schemas.py:ResourceUpdate` | `frontend/src/types/resources.ts:ResourceSnapshot` |
 
 When changing one, change the other.
 

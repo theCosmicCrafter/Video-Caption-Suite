@@ -1,18 +1,19 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useWebSocket, useApi, useResizable } from '@/composables'
+import { useWebSocket, useResourceWebSocket, useApi, useResizable } from '@/composables'
 import { useVideoStore } from '@/stores/videoStore'
 import { useProgressStore } from '@/stores/progressStore'
 import { useSettingsStore } from '@/stores/settingsStore'
 import { BaseButton, VirtualGrid } from '@/components/base'
-import { LayoutSidebar, ResizablePanel } from '@/components/layout'
+import { LayoutSidebar, ResizablePanel, ResourceMonitor } from '@/components/layout'
 import { VideoTile, VideoGridToolbar } from '@/components/video'
 import { CaptionPanel } from '@/components/caption'
 import { AnalyticsPanel } from '@/components/analytics'
 import type { VideoInfo } from '@/types'
 
 const { connect, disconnect } = useWebSocket()
+const { connect: connectResources, disconnect: disconnectResources } = useResourceWebSocket()
 const api = useApi()
 const videoStore = useVideoStore()
 const progressStore = useProgressStore()
@@ -131,11 +132,13 @@ async function refreshVideos() {
 
 onMounted(() => {
   connect()
+  connectResources()
   refreshVideos()
 })
 
 onUnmounted(() => {
   disconnect()
+  disconnectResources()
 })
 </script>
 
@@ -222,14 +225,8 @@ onUnmounted(() => {
 
       <!-- Right: Status indicators -->
       <div class="flex items-center gap-3">
-        <!-- VRAM indicator -->
-        <div v-if="state.vram_used_gb > 0" class="hidden sm:flex items-center gap-1.5 text-xs">
-          <svg class="w-3.5 h-3.5 text-dark-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z" />
-          </svg>
-          <span class="font-mono text-dark-400">{{ state.vram_used_gb.toFixed(1) }}GB</span>
-        </div>
+        <!-- Resource monitor -->
+        <ResourceMonitor />
 
         <!-- Connection status -->
         <div class="flex items-center gap-1.5 text-xs">

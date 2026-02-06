@@ -34,7 +34,8 @@ frontend/src/
 │   ├── layout/             # Structural components
 │   │   ├── LayoutSidebar.vue
 │   │   ├── ResizablePanel.vue
-│   │   └── AppHeader.vue
+│   │   ├── AppHeader.vue
+│   │   └── ResourceMonitor.vue
 │   ├── settings/           # Settings UI
 │   │   ├── SettingsPanel.vue
 │   │   ├── DirectorySettings.vue
@@ -67,17 +68,20 @@ frontend/src/
 │   ├── videoStore.ts
 │   ├── progressStore.ts
 │   ├── settingsStore.ts
-│   └── analyticsStore.ts
+│   ├── analyticsStore.ts
+│   └── resourceStore.ts
 ├── composables/            # Reusable logic
 │   ├── useApi.ts
 │   ├── useWebSocket.ts
+│   ├── useResourceWebSocket.ts
 │   └── useResizable.ts
 ├── types/                  # TypeScript definitions
 │   ├── settings.ts
 │   ├── progress.ts
 │   ├── video.ts
 │   ├── api.ts
-│   └── analytics.ts
+│   ├── analytics.ts
+│   └── resources.ts
 └── utils/                  # Helper functions
     └── formatters.ts
 ```
@@ -377,6 +381,49 @@ resetSettings(): void
 
 ---
 
+### resourceStore
+
+**Purpose:** Tracks real-time system resource metrics (CPU, RAM, GPU) from the resource monitoring WebSocket.
+
+**File:** `frontend/src/stores/resourceStore.ts`
+
+**State:**
+```typescript
+interface ResourceState {
+  snapshot: ResourceSnapshot | null  // Latest resource data from WebSocket
+}
+```
+
+**Getters (Computed Helpers):**
+```typescript
+// CPU utilization percentage (0-100)
+cpuPercent: number
+
+// RAM utilization percentage (0-100)
+ramPercent: number
+
+// Primary GPU (index 0) utilization percentage
+gpuUtilPercent: number
+
+// Formatted VRAM display string (e.g. "16.2 / 24.0 GB")
+vramDisplay: string
+
+// Primary GPU temperature in Celsius
+gpuTemp: number
+
+// Temperature color class for UI indicators
+// Returns Tailwind color based on temperature thresholds
+tempColor: string
+```
+
+**Actions:**
+```typescript
+// Update snapshot from WebSocket message
+updateFromSnapshot(data: ResourceSnapshot): void
+```
+
+---
+
 ## Composables
 
 ### useWebSocket
@@ -425,6 +472,32 @@ const reconnect = () => {
   }, delay)
 }
 ```
+
+---
+
+### useResourceWebSocket
+
+**Purpose:** WebSocket connection for real-time resource monitoring, separate from the progress WebSocket.
+
+**File:** `frontend/src/composables/useResourceWebSocket.ts`
+
+**Usage:**
+```typescript
+const { isConnected, connect, disconnect } = useResourceWebSocket()
+
+// Connect on mount
+onMounted(() => connect())
+
+// Cleanup on unmount
+onUnmounted(() => disconnect())
+```
+
+**Features:**
+- Connects to `ws://localhost:8000/ws/resources`
+- Receives resource snapshots every 2 seconds
+- Automatic reconnection with exponential backoff
+- Updates `resourceStore` on each incoming message
+- Independent lifecycle from the progress WebSocket
 
 ---
 
@@ -689,6 +762,28 @@ const includeImages = ref<boolean>(false)
 
 ---
 
+### ResourceMonitor.vue (Layout Component)
+
+**Purpose:** Compact real-time resource indicators in the application header, with a click-to-expand popover showing detailed per-GPU breakdowns.
+
+**File:** `frontend/src/components/layout/ResourceMonitor.vue`
+
+**Features:**
+- **Compact header indicators:** CPU %, RAM %, and primary GPU utilization displayed inline
+- **Click-to-expand popover:** Detailed view with per-GPU breakdowns including:
+  - GPU utilization bar (percentage)
+  - VRAM usage bar (used / total GB)
+  - Temperature with color-coded indicator
+  - Power draw vs. power limit
+- Automatically connects/disconnects the resource WebSocket on mount/unmount
+- Uses `resourceStore` for reactive state and computed helpers (e.g., `tempColor` for temperature thresholds)
+
+**Dependencies:**
+- `useResourceWebSocket` composable for WebSocket lifecycle
+- `resourceStore` for snapshot state and computed getters
+
+---
+
 ### ProgressBar.vue / ProgressRing.vue
 
 **Purpose:** Visual progress indicators.
@@ -903,6 +998,29 @@ interface AnalyticsSettings {
   ngramSize: number
   visualizationType: VisualizationType
   selectedVideos: string[] | null  // null = all videos
+}
+```
+
+### resources.ts
+
+```typescript
+interface GPUMetrics {
+  index: number
+  name: string
+  utilization_percent: number
+  vram_used_gb: number
+  vram_total_gb: number
+  temperature_c: number
+  power_draw_w: number
+  power_limit_w: number
+}
+
+interface ResourceSnapshot {
+  cpu_percent: number
+  ram_used_gb: number
+  ram_total_gb: number
+  gpus: GPUMetrics[]
+  timestamp: string
 }
 ```
 
